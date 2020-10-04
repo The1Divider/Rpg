@@ -1,4 +1,12 @@
 class Menus:
+    start_menu = "------------------\n" \
+                 "    Epic RPG      \n" \
+                 "------------------\n" \
+                 "1) New Game       \n" \
+                 "2) Load Game      \n" \
+                 "3) Help           \n" \
+                 "4) Quit             "
+
     main_menu = "------------------\n" \
                 "    Main Menu     \n" \
                 "------------------\n" \

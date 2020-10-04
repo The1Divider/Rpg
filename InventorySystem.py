@@ -11,51 +11,61 @@ class Tagging:
             self.special = special
             self.price = price
 
+def newPlayer():
+    import queue
+    armour = {
+        "Helmet": None,
+        "Chestplate": None,
+        "Legs": None,
+        "Boots": None,
+        "Rings": {
+            "Ring1": None,
+            "Ring2": None
+        }
+    }
+    weapons = {
+        "Weapon_Slots": {
+            "Weapon1": None,
+            "Weapon2": None,
+        },
+        "Quiver": None,
+        "Sheath": None,
+        "Bag": queue.PriorityQueue(maxsize=10)
+    }
+    stats = {
+        "HP": 10,
+        "Dmg": 1,
+        "Def": 0,
+        "Crit": 0,
+        "Block": 0
+    }
+    level = {
+        "Difficulty": None,
+        "Enemy_Level": 1,
+        "Player_Level": 1,
+    }
+    weapons["Bag"].put((1, "Rock"))
+    items = {"Armour": armour, "Weapons": weapons}
+    character = {"Items": items, "Stats": stats, "Level": level}
+    return character
+
 
 class Inventory:
-
     def __init__(self, character_save, **character):
         import queue
         if not character_save:
-            self.armour = {
-                "Helmet": None,
-                "Chestplate": None,
-                "Legs": None,
-                "Boots": None,
-                "Rings": {
-                    "Ring1": None,
-                    "Ring2": None
-                    }
-               }
-            self.weapons = {
-                "Weapon1": None,
-                "Weapon2": None,
-                "Quiver": None,
-                "Sheath": None,
-                "Bag": queue.PriorityQueue(maxsize=10)
-            }
-            self.stats = {
-                "HP": 10,
-                "Dmg": 1,
-                "Def": 0,
-                "Crit": 0,
-                "Block": 0
-            }
-            self.weapons["Bag"].put((2, "rock"))
-            self.weapons["Bag"].put((1, "chicken"))
+            self.character = newPlayer()
 
     def getItem(self, item):
-        wqueue = self.weapons["Bag"]
-        weapon = wqueue.get()
+        wqueue = self.character["Items"]["Weapons"]["Bag"]
+        bag_item = wqueue.get()
 
         while True:
-            if weapon[1] != item:
+            if bag_item[1] != item:
                 bag_size = wqueue.qsize()
-                weapon = (weapon[0] + bag_size + 1, weapon[1])
-                wqueue.put(weapon)
-                weapon = wqueue.get()
+                bag_item = (bag_item[0] + bag_size + 1, bag_item[1])
+                wqueue.put(bag_item)
+                bag_item = wqueue.get()
             else:
-                return weapon
+                return bag_item
 
-Inventory(False)
-print(Inventory(False).getItem('rock'))
