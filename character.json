@@ -1,0 +1,15 @@
+{
+  "Is_Save": false,
+  "Character": {
+    "Items": null,
+    "Balance": null,
+    "Stats": null
+  },
+  "Level": {
+    "Difficulty": null,
+    "Enemy_and_Player": {
+      "Player": null,
+      "Enemy": null
+    }
+  }
+}
