@@ -37,7 +37,7 @@ def mainMenu(character):
         elif selection in ["5", "load", "save"]:
             load_save_selection = input("Load or save a character file?:\n").lower()
             loadSave(load_save_selection, character)
-            return mainMenu()
+            return mainMenu(character)
         elif selection in ["6", "exit", "quit", "stop"]:
             quit()
         else:
@@ -45,20 +45,32 @@ def mainMenu(character):
 
 
 def loadSave(selection, player):
+    bag_queue = player["Items"]["Weapons"]["Bag"]
     if selection == "save":
-        with open("../../Documents/GitHub/Rpg/character.json", "w") as f:
+        with open("character.json", "w") as f:
+            bag = []
+            for i in range(bag_queue.qsize()):
+                item = bag_queue.get()
+                bag.append(item[1].save())
+                print(bag)
+                player["Items"]["Weapons"]["Bag"] = bag
             json.dump(player, f, indent=2)
             print("Success!")
+            return player
 
     elif selection == "load":
-        with open("../../Documents/GitHub/Rpg/character.json", "r") as f:
+        import queue
+        with open("character.json", "r") as f:
             player_save = json.load(f)
             character = player_save["Character"]
-            character_save = player_save["Is_Save"]
-            level = player_save["Level"]
+            items = character["Items"]["Weapons"]["Bag"]
+            character["Items"]["Weapons"]["Bag"] = queue.PriorityQueue(maxsize=10)
+            for i in items:
+                character["Items"]["Weapons"]["Bag"].put(i)
             from InventorySystem import Inventory
             Inventory(character_save, character)
             print("Success!")
+            return character
 
 
 if __name__ == "__main__":

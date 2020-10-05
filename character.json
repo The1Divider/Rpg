@@ -17,4 +17,33 @@
       },
       "Quiver": null,
       "Sheath": null,
-      "Bag": 
+      "Bag": [
+        {
+          "Name": "rock",
+          "Item_type": "weapon",
+          "Dmg": 1,
+          "Crit": 0,
+          "Special": "",
+          "Price": 0,
+          "Hidden": {
+            "Item_Id": 0,
+            "Req_Level": null,
+            "Sellable": false
+          }
+        }
+      ]
+    }
+  },
+  "Stats": {
+    "HP": 10,
+    "Dmg": 1,
+    "Def": 0,
+    "Crit": 0,
+    "Block": 0
+  },
+  "Level": {
+    "Difficulty": null,
+    "Enemy_Level": 1,
+    "Player_Level": 1
+  }
+}
