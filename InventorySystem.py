@@ -6,7 +6,7 @@ class Tagging:
 
     @dataclass
     class Hidden:
-        def __init__(self, item_id: int, req_level: int, sellable: bool):
+        def __init__(self, item_id: int, req_level, sellable: bool):
             self.item_id = item_id
             self.req_level = req_level
             self.sellable = sellable
@@ -16,7 +16,7 @@ class Tagging:
 
     @dataclass
     class Item:
-        def __init__(self, name: str, item_type: str, dmg: int, crit: int, special: str, price: int, hidden: list):
+        def __init__(self, name: str, item_type: str, dmg: int, crit: int, special: str, price: int, hidden):
             self.name = name
             self.item_type = item_type
             self.dmg = dmg

@@ -1,8 +1,7 @@
-import random
-import json
 from Landscapes import *
 from InventorySystem import *
 global inventory
+
 
 def startMenu():
     print(Menus.start_menu)
