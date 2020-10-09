@@ -1,4 +1,4 @@
-from Landscapes import *
+from Sprites import *
 from InventorySystem import *
 global inventory
 
@@ -10,11 +10,11 @@ def startMenu():
         if selection in ["1", "new game"]:
             global inventory
             inventory = Inventory(None, new_player=True)
-            mainMenu()
+            return mainMenu()
 
         elif selection in ["2", "load game"]:
             Inventory.loadPlayer()
-            mainMenu()
+            return mainMenu()
 
         elif selection in ["3", "help"]:
             break
@@ -49,7 +49,7 @@ def mainMenu():
             elif selection == "load":
                 Inventory.loadPlayer()
 
-            return mainMenu()
+            print(Menus.main_menu)
 
         elif selection in ["6", "exit", "quit", "stop"]:
             quit()
