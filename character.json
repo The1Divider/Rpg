@@ -1,0 +1,61 @@
+{
+  "Player_Save_Bool": true,
+  "Items": {
+    "Armour": {
+      "Helmet": null,
+      "Chestplate": null,
+      "Legs": null,
+      "Boots": null,
+      "Rings": {
+        "Ring1": {
+          "Name": "Wedding Ring",
+          "Item_Type": "ring",
+          "Hp": 0,
+          "Defence": 0,
+          "Special": "Your last memory of the real world",
+          "Price": 0,
+          "Hidden": {
+            "Item_Id": 17,
+            "Req_Level": null,
+            "Sellable": false
+          }
+        },
+        "Ring2": null
+      }
+    },
+    "Weapons": {
+      "Weapon_Slots": {
+        "Weapon1": null,
+        "Weapon2": null
+      },
+      "Quiver": null,
+      "Bag": [
+        {
+          "Name": "Rock",
+          "Item_type": "sword",
+          "Dmg": 1,
+          "Crit": 0,
+          "Special": "",
+          "Price": 0,
+          "Hidden": {
+            "Item_Id": 1,
+            "Req_Level": null,
+            "Sellable": false
+          }
+        }
+      ]
+    }
+  },
+  "Stats": {
+    "HP": 10,
+    "Dmg": 1,
+    "Def": 0,
+    "Crit": 0,
+    "Block": 0
+  },
+  "Level": {
+    "Difficulty": null,
+    "Enemy_Level": 1,
+    "Player_Level": 1
+  }
+}
