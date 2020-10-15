@@ -21,7 +21,7 @@ class Inventory:
             "Legs": None,
             "Boots": None,
             "Rings": {
-                "Ring1": None,
+                "Ring1": ItemList.wedding_ring,
                 "Ring2": None
             }
         }
@@ -46,7 +46,6 @@ class Inventory:
             "Player_Level": 1,
         }
         weapons["Bag"].put(ItemList.rock)
-        armour["Rings"]["Ring1"] = ItemList.wedding_ring
         items = {"Armour": armour, "Weapons": weapons}
         self.character = {"Player_Save_Bool": player_save_bool, "Items": items, "Stats": stats, "Level": level}
 
@@ -54,7 +53,7 @@ class Inventory:
         bag_queue = self.character["Items"]["Weapons"]["Bag"]
         bag_item = bag_queue.get()
         while True:
-            if bag_item[1] != item:
+            if bag_item != item:
                 bag_queue.put(bag_item)
                 bag_item = bag_queue.get()
             else:
@@ -76,7 +75,6 @@ class Inventory:
 
     def savePlayer(self):
         bag_queue = self.character["Items"]["Weapons"]["Bag"]
-        print(self.character["Items"]["Armour"]["Rings"]["Ring1"].name)
         with open("character.json", "w") as f:
             bag = []
             for i in range(bag_queue.qsize()):
@@ -85,13 +83,28 @@ class Inventory:
                 item = item.item_template
                 item["Hidden"] = hidden
                 bag.append(item)
-            print(self.character["Items"]["Armour"])
-            for i in self.character["Items"]["Armour"]:
-                print(i.item_type)
-                hidden = i.hidden.hidden_template
-                item = i.armour_template
-                i["Hidden"] = hidden
-                i = item
+
+            for key, value in self.character["Items"]["Armour"]["Rings"].items():
+                if value is not None:
+                    hidden = value.hidden.hidden_template
+                    item = value.armour_template
+                    item["Hidden"] = hidden
+                    self.character["Items"]["Armour"]["Rings"][key] = item
+
+            for key, value in self.character["Items"]["Armour"].items():
+                if key != "Rings" and value is not None:
+                    hidden = value.hidden.hidden_template
+                    item = value.armour_template
+                    item["Hidden"] = hidden
+                    self.character["Items"]["Armour"][key] = item
+
+            for key, value in self.character["Items"]["Weapons"]["Weapon_Slots"].items():
+                if value is not None and key != "Bag":
+                    hidden = value.hidden.hidden_template
+                    item = value.item_template
+                    item["Hidden"] = hidden
+                    self.character["Items"]["Weapons"]["Weapon_Slots"][key] = item
+
             self.character["Items"]["Weapons"]["Bag"] = bag
             json.dump(self.character, f, indent=2)
             print("Success!")
