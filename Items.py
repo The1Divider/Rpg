@@ -51,16 +51,16 @@ class ItemList:
     armour_list = ["Straw Sunhat", "Cotton Shirt", "Cotton_pants", "Straw Sandals", "Leather Helmet", "Leather Tunic",
                    "Leather Leggings", "Leather Boots", "Wedding Ring"]
 
-    rock = Tagging.Item(item_list[0], "sword", 1, 1, 0, 0, "", 0, Tagging.Hidden(1, None, False))
-    stick_rock = Tagging.Item(item_list[1], "sword", 1, 1, 0, 0, "Sticky", 0, Tagging.Hidden(2, None, False))
+    rock = Tagging.Item(item_list[0], "weapon", 1, 1, 0, 0, "", 0, Tagging.Hidden(1, None, False))
+    sticky_rock = Tagging.Item(item_list[1], "weapon", 1, 1, 0, 0, "Sticky", 0, Tagging.Hidden(2, None, False))
     basic_sword_tag = "Nothing, what did you expect?"
-    basic_sword = Tagging.Item(item_list[2], "sword", 1, 5, 0, 0, basic_sword_tag, 1, Tagging.Hidden(3, None, True))
-    copper_sword = Tagging.Item(item_list[3], "sword", 2, 5, 50, 5, "", 5, Tagging.Hidden(4, 2, True))
-    iron_sword = Tagging.Item(item_list[4], "sword", 2, 10, 50, 20, "", 10, Tagging.Hidden(5, 5, True))
-    steel_sword = Tagging.Item(item_list[5], "sword", 3, 15, 75, 20, "", 25, Tagging.Hidden(6, 10, True))
-    diamond_cut_steel_sword = Tagging.Item(item_list[6], "sword", 4, 25, 25, 10, "", 50, Tagging.Hidden(7, 15, True))
+    basic_sword = Tagging.Item(item_list[2], "weapon", 1, 5, 0, 0, basic_sword_tag, 1, Tagging.Hidden(3, None, True))
+    copper_sword = Tagging.Item(item_list[3], "weapon", 2, 5, 50, 5, "", 5, Tagging.Hidden(4, 2, True))
+    iron_sword = Tagging.Item(item_list[4], "weapon", 2, 10, 50, 20, "", 10, Tagging.Hidden(5, 5, True))
+    steel_sword = Tagging.Item(item_list[5], "weapon", 3, 15, 75, 20, "", 25, Tagging.Hidden(6, 10, True))
+    diamond_cut_steel_sword = Tagging.Item(item_list[6], "weapon", 4, 25, 25, 10, "", 50, Tagging.Hidden(7, 15, True))
 
-    handcrafted_bow = Tagging.Item(item_list[7], "bow", 2, 5, 0, 0, "", 2, Tagging.Hidden(8, 1, True))
+    handcrafted_bow = Tagging.Item(item_list[7], "weapon", 2, 5, 0, 0, "bow", 2, Tagging.Hidden(8, 1, True))
 
     straw_sunhat = Tagging.Armour(armour_list[0], "helmet", 1, 0, "", 1, Tagging.Hidden(9, None, True))
     cotton_shirt = Tagging.Armour(armour_list[1], "chestplate", 1, 0, "", 1, Tagging.Hidden(10, None, True))

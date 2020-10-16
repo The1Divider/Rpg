@@ -1,63 +1,128 @@
 import json
-from Items import *
+from Items import ItemList
+import queue
+from dataclasses import dataclass
+
+
+@dataclass()
+class Armour:
+    def __init__(self):
+        self.helmet = None
+        self.chestplate = None
+        self.leggings = None
+        self.boots = None
+        self.ring1 = None
+        self.ring2 = None
+
+
+@dataclass()
+class Weapons:
+    def __init__(self):
+        self.weapon1 = None
+        self.weapon2 = None
+        self.quiver = 0
+
+
+@dataclass()
+class Stats:
+    def __init__(self):
+        self.hp = 10
+        self.dmg = 1
+        self.defence = 0
+        self.crit = 0
+        self.block = 0
+
+
+@dataclass()
+class Levels:
+    def __init__(self):
+        self.difficulty = None
+        self.enemy_level = 1
+        self.player_level = 1
+
 
 class Inventory:
-    def __init__(self, character, new_player: bool):
-        if new_player:
-            self.newPlayer()
-        else:
-            self.character = character
+    def __init__(self):
+        self.queue_max_size = 10
+        self.Armour = Armour()
+        self.Weapons = Weapons()
+        self.Stats = Stats()
+        self.Levels = Levels()
+
+        self.bag = queue.Queue(maxsize=self.queue_max_size)
+        self.armour_list = [self.Armour.helmet, self.Armour.chestplate, self.Armour.leggings,
+                            self.Armour.boots, self.Armour.ring1, self.Armour.ring2]
+        self.weapon_list = [self.Weapons.weapon1, self.Weapons.weapon2, self.Weapons.quiver]
+
 
     def __call__(self):
-        return self.character
+        return self
 
-    def newPlayer(self):
-        import queue
-        from Items import ItemList
-        player_save_bool = True
-        armour = {
-            "Helmet": None,
-            "Chestplate": None,
-            "Legs": None,
-            "Boots": None,
-            "Rings": {
-                "Ring1": ItemList.wedding_ring,
-                "Ring2": None
-            }
-        }
-        weapons = {
-            "Weapon_Slots": {
-                "Weapon1": None,
-                "Weapon2": None,
-            },
-            "Quiver": None,
-            "Bag": queue.Queue(maxsize=10)
-        }
-        stats = {
-            "HP": 10,
-            "Dmg": 1,
-            "Def": 0,
-            "Crit": 0,
-            "Block": 0
-        }
-        level = {
-            "Difficulty": None,
-            "Enemy_Level": 1,
-            "Player_Level": 1,
-        }
-        weapons["Bag"].put(ItemList.rock)
-        items = {"Armour": armour, "Weapons": weapons}
-        self.character = {"Player_Save_Bool": player_save_bool, "Items": items, "Stats": stats, "Level": level}
+    def new_player(self):
+        self.Armour.ring1 = ItemList.wedding_ring
+        self.bag.put(ItemList.rock)
 
-    def getItem(self, item):
-        bag_queue = self.character["Items"]["Weapons"]["Bag"]
+    def get_item(self, item):
+        bag_queue = self.bag
         bag_item = bag_queue.get()
-        while True:
-            if bag_item != item:
-                bag_queue.put(bag_item)
-                bag_item = bag_queue.get()
-            else:
-                return bag_item
+        while bag_item.name != item:
+            bag_queue.put(bag_item)
+            bag_item = bag_queue.get()
+        return bag_item
+
+    # this still needs to be fixed
+    def load_player(self):
+        with open("character.json", "r") as f:
+            player = json.load(f)
+            f.close()
+        player_bag = player["Items"]["Bag"]
+        items = player_bag
+        player_bag = queue.Queue(maxsize=10)
+        for item in items:
+            item_name = item["Name"].lower().replace(" ", "_").replace("-", "_")
+            item = eval("ItemList.{}".format(item_name))
+            player_bag.put(item)
+        Inventory()
+        print("Success!")
+
+    def save_player(self):
+        arm, wep, stat, lev = self.Armour, self.Weapons, self.Stats, self.Levels
+        armour_dict = {"Helmet": arm.helmet, "Chestplate": arm.chestplate, "Leggings": arm.leggings,
+                       "Boots": arm.boots, "Ring1": arm.ring1, "Ring2": arm.ring2}
+        weapon_dict = {"Weapon1": wep.weapon1, "Weapon2": wep.weapon2, "Quiver": wep.quiver}
+        stat_dict = {"Hp": stat.hp, "Dmg": stat.dmg, "Def": stat.defence, "Crit": stat.crit, "Block": stat.block}
+        level_dict = {"Difficulty": lev.difficulty, "Enemy Level": lev.enemy_level, "Player Level": lev.player_level}
+        bag = []
+        bag_queue = self.bag
+
+        for _ in range(bag_queue.qsize()):
+            item = bag_queue.get()
+            hidden = item.hidden.hidden_template
+            item = item.item_template
+            item["Hidden"] = hidden
+            bag.append(item)
+
+        # converting item to dict object
+        for key, armour in armour_dict.items():
+            if armour is not None:
+                hidden = armour.hidden.hidden_template
+                item = armour.armour_template
+                item["Hidden"] = hidden
+                armour_dict[key] = item
+
+        for key, weapon in weapon_dict.items():
+            if weapon is not None and key != "Quiver":
+                hidden = weapon.hidden.hidden_template
+                item = weapon.item_template
+                item["Hidden"] = hidden
+                weapon_dict[key] = item
+
+        with open("character.json", "w") as f:
+            player = {"Armour": armour_dict, "Weapons": weapon_dict, "Bag": bag,
+                      "Stats": stat_dict, "Levels": level_dict}
+            json.dump(player, f, indent=2)
+            f.close()
+            print("Success!")
 
     class NoItem:
         def __init__(self):
@@ -66,96 +131,30 @@ class Inventory:
         def __call__(self):
             return self.name
 
-    def loadPlayer():
-        import queue
-        with open("character.json", "r") as f:
-            player_save = json.load(f)
-            player_bag = player_save["Items"]["Weapons"]["Bag"]
-            items = player_bag
-            player_bag = queue.Queue(maxsize=10)
-            for i in items:
-                item_name = i["Name"].lower().replace(" ", "_").replace("-", "_")
-                item = eval("ItemList.{}".format(item_name))
-                player_bag.put(item)
-            Inventory(player_save, False)
-            print("Success!")
+    def inventory_setup(self):
+        x = self.NoItem()  # Placeholder for a .name attribute if no item
 
-    def savePlayer(self):
-        bag_queue = self.character["Items"]["Weapons"]["Bag"]
-        with open("character.json", "w") as f:
-            bag = []
-            for i in range(bag_queue.qsize()):
-                item = bag_queue.get()
-                hidden = item.hidden.hidden_template
-                item = item.item_template
-                item["Hidden"] = hidden
-                bag.append(item)
-
-            for key, value in self.character["Items"]["Armour"]["Rings"].items():
-                if value is not None:
-                    hidden = value.hidden.hidden_template
-                    item = value.armour_template
-                    item["Hidden"] = hidden
-                    self.character["Items"]["Armour"]["Rings"][key] = item
-
-            for key, value in self.character["Items"]["Armour"].items():
-                if key != "Rings" and value is not None:
-                    hidden = value.hidden.hidden_template
-                    item = value.armour_template
-                    item["Hidden"] = hidden
-                    self.character["Items"]["Armour"][key] = item
-
-            for key, value in self.character["Items"]["Weapons"]["Weapon_Slots"].items():
-                if value is not None and key != "Bag":
-                    hidden = value.hidden.hidden_template
-                    item = value.item_template
-                    item["Hidden"] = hidden
-                    self.character["Items"]["Weapons"]["Weapon_Slots"][key] = item
-
-            self.character["Items"]["Weapons"]["Bag"] = bag
-            json.dump(self.character, f, indent=2)
-            print("Success!")
-
-    def inventorySetup(self):
-        x = self.NoItem()
         armour_list = []
-        for key, value in self.character["Items"]["Armour"].items():
-            if key == "Rings":
-                for ring_key, ring_value in self.character["Items"]["Armour"]["Rings"].items():
-                    if ring_value is None:
-                        ring_value = x
-                        armour_list.append((ring_key, ring_value))
-                    else:
-                        armour_list.append((ring_key, ring_value))
-            if value is None and key != "Rings":
-                value = x
-                armour_list.append((key, value))
-            else:
-                armour_list.append((key, value))
+        for item in self.armour_list:
+            if item is None:
+                item = x
+            armour_list.append(item)
 
         weapon_list = []
-        print(self.character["Items"]["Weapons"])
-        for key, value in self.character["Items"]["Weapons"].items():
-            if key == "Weapon_Slots":
-                for weapon_key, weapon_value in self.character["Items"]["Weapons"]["Weapon_Slots"].items():
-                    if weapon_value is None:
-                        weapon_value = x
-                        weapon_list.append((weapon_key, weapon_value))
-                    else:
-                        weapon_list.append((weapon_key, weapon_value))
-            elif value is None and key != "Bag":
-                value = x
-                weapon_list.append((key, value))
+        for item in self.weapon_list:
+            if item is None:
+                item = x
+            weapon_list.append(item)
 
-            elif key != "Bag":
-                weapon_list.append((key, value))
-
+        # Lists items in bag without mutating the queue
         bag_list = []
-        bag_queue = self.character["Items"]["Weapons"]["Bag"]
-        for i in range(bag_queue.qsize()):
-            item = bag_queue.get()
+        bag_queue = self.bag
+        for _ in range(bag_queue.qsize()):
+            temp = bag_queue.get()
+            item = temp
+            bag_queue.put(temp)
             bag_list.append(item.name)
-        while len(bag_list) < 10:
+        while len(bag_list) < self.queue_max_size:
             bag_list.append(None)
 
         return armour_list, weapon_list, bag_list

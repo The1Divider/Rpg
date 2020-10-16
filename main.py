@@ -2,22 +2,21 @@ import random
 import time
 from Sprites import *
 from InventorySystem import *
-global inventory
+
+Inv = Inventory()
 
 
-
-def startMenu():
+def start_menu():
     print(Menus.start_menu)
     while True:
         selection = input(">").lower()
         if selection in ["1", "new game"]:
-            global inventory
-            inventory = Inventory(None, new_player=True)
-            return mainMenu()
+            Inv().new_player()
+            return main_menu()
 
         elif selection in ["2", "load game"]:
-            Inventory.loadPlayer()
-            return mainMenu()
+            Inv().load_player()
+            return main_menu()
 
         elif selection in ["3", "help"]:
             break
@@ -26,15 +25,16 @@ def startMenu():
             quit()
 
 
-def mainMenu():
+def main_menu():
     print(Menus.main_menu)
     while True:
         selection = input(">").lower()
         if selection in ["1", "quest"]:
-            startGame()
+            start_game()
 
         elif selection in ["2", "inventory"]:
-            inventoryDisplay()
+            inventory_display()
+
         elif selection in ["3", "shop"]:
             break
 
@@ -46,10 +46,10 @@ def mainMenu():
                 selection = input("Load or save a character file?:\n").lower()
 
             if selection == "save":
-                Inventory.savePlayer(inventory)
+                Inv().save_player()
 
             elif selection == "load":
-                Inventory.loadPlayer()
+                Inv().load_player()
 
             print(Menus.main_menu)
 
@@ -60,15 +60,14 @@ def mainMenu():
             print("Invalid selection")
 
 
-def inventoryDisplay():
-    armour_list, weapon_list, bag_list = Inventory.inventorySetup(inventory)
-    armour = Menus.InventoryMenus.inventoryArmourMenu(armour_list[0][1].name, armour_list[1][1].name,
-                                                      armour_list[2][1].name, armour_list[3][1].name,
-                                                      armour_list[4][1].name, armour_list[5][1].name)
-    weapon = Menus.InventoryMenus.inventoryWeaponMenu(weapon_list[0][1].name, weapon_list[1][1].name,
-                                                      weapon_list[2][1].name)
-    bag = Menus.InventoryMenus.inventoryBagMenu(bag_list[0], bag_list[1], bag_list[2], bag_list[3], bag_list[4],
-                                                bag_list[5], bag_list[6], bag_list[7], bag_list[8], bag_list[9])
+def inventory_display():
+    armour_list, weapon_list, bag_list = Inv().inventory_setup()
+    print(armour_list)
+    armour = Menus.InventoryMenus.inventory_armour_menu(armour_list[0].name, armour_list[1].name, armour_list[2].name,
+                                                        armour_list[3].name, armour_list[4].name, armour_list[5].name)
+    weapon = Menus.InventoryMenus.inventory_weapon_menu(weapon_list[0].name, weapon_list[1].name, weapon_list[2])
+    bag = Menus.InventoryMenus.inventory_bag_menu(bag_list[0], bag_list[1], bag_list[2], bag_list[3], bag_list[4],
+                                                  bag_list[5], bag_list[6], bag_list[7], bag_list[8], bag_list[9])
 
     def armour_menu():
         print(armour)
@@ -90,11 +89,10 @@ def inventoryDisplay():
         elif selection == 2:
             return weapon_menu()
         elif selection == 3:
-            return mainMenu()
+            return main_menu()
 
     def weapon_menu():
         print(weapon)
-        selection = None
         while True:
             try:
                 selection = int(input("1) Select Item, 2) Next Page 3) Previous Page, 4) Exit\n"))
@@ -114,7 +112,7 @@ def inventoryDisplay():
         elif selection == 3:
             return armour_menu()
         elif selection == 4:
-            return mainMenu()
+            return main_menu()
 
     def bag_menu():
         print(bag)
@@ -136,13 +134,12 @@ def inventoryDisplay():
         elif selection == 2:
             return weapon_menu()
         elif selection == 3:
-            return mainMenu()
+            return main_menu()
 
     armour_menu()
 
 
-
-def startGame():
+def start_game():
     print(Landscapes.main_village)
     print("You start your adventure in the village")
     start_choice = input("Which direction would you like to go?\n").lower()
@@ -150,7 +147,7 @@ def startGame():
         start_choice = input("Invalid direction (north, south, east, west)\n")
 
     if start_choice == "nowhere":
-        lazy_selection = random.randint(1,4)
+        lazy_selection = random.randint(1, 4)
         if lazy_selection == 1:
             print("You decide to take a nap")
         elif lazy_selection == 2:
@@ -160,8 +157,8 @@ def startGame():
         elif lazy_selection == 4:
             print("Your neighbor reports you for soliciting")
         time.sleep(.5)
-        mainMenu()
+        main_menu()
 
 
 if __name__ == "__main__":
-    startMenu()
+    start_menu()
