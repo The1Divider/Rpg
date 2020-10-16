@@ -19,7 +19,7 @@ class Menus:
 
     class InventoryMenus:
         @staticmethod
-        def inventoryMenuSpacing(menu_list, special_list):
+        def inventory_menu_spacing(menu_list, special_list):
             max_length = len(max(menu_list, key=len))
             for i in menu_list:
                 ind = menu_list.index(i)
@@ -33,7 +33,7 @@ class Menus:
             return "".join(menu_list)
 
         @staticmethod
-        def inventoryArmourMenu(helmet, chest, leg, boots, ring1, ring2):
+        def inventory_armour_menu(helmet, chest, leg, boots, ring1, ring2):
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Armour |\n"
             menu_line3 = "|-------------------------------|\n"
@@ -46,22 +46,22 @@ class Menus:
             menu_linex = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9, menu_linex]
-            return Menus.InventoryMenus.inventoryMenuSpacing(menu_list, [menu_line1, menu_line3, menu_linex])
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_linex])
 
         @staticmethod
-        def inventoryWeaponMenu(weapon1, weapon2, quiver):
+        def inventory_weapon_menu(weapon1, weapon2, quiver):
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
             menu_line3 = "|-------------------------------|\n"
-            menu_line4 = " Weapon 1 | {} |\n".format(weapon1)
-            menu_line5 = " Weapon 2 | {} |\n".format(weapon2)
-            menu_line6 = " Quiver   | {} |\n".format(quiver)
+            menu_line4 = "| Weapon 1 | {} |\n".format(weapon1)
+            menu_line5 = "| Weapon 2 | {} |\n".format(weapon2)
+            menu_line6 = "| Quiver   | {} |\n".format(quiver)
             menu_line7 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6, menu_line7]
-            return Menus.InventoryMenus.inventoryMenuSpacing(menu_list, [menu_line1, menu_line3, menu_line7])
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line7])
 
         @staticmethod
-        def inventoryBagMenu(item1, item2, item3, item4, item5, item6, item7, item8, item9, itemx):
+        def inventory_bag_menu(item1, item2, item3, item4, item5, item6, item7, item8, item9, itemx):
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
             menu_line3 = "|-------------------------------|\n"
@@ -73,7 +73,7 @@ class Menus:
             menu_line9 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9]
-            return Menus.InventoryMenus.inventoryMenuSpacing(menu_list, [menu_line1, menu_line3, menu_line9])
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9])
 
     shop_menu_main = None
     shop_menu_buy = None
