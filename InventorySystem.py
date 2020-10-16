@@ -59,6 +59,13 @@ class Inventory:
             else:
                 return bag_item
 
+    class NoItem:
+        def __init__(self):
+            self.name = None
+
+        def __call__(self):
+            return self.name
+
     def loadPlayer():
         import queue
         with open("character.json", "r") as f:
@@ -108,3 +115,47 @@ class Inventory:
             self.character["Items"]["Weapons"]["Bag"] = bag
             json.dump(self.character, f, indent=2)
             print("Success!")
+
+    def inventorySetup(self):
+        x = self.NoItem()
+        armour_list = []
+        for key, value in self.character["Items"]["Armour"].items():
+            if key == "Rings":
+                for ring_key, ring_value in self.character["Items"]["Armour"]["Rings"].items():
+                    if ring_value is None:
+                        ring_value = x
+                        armour_list.append((ring_key, ring_value))
+                    else:
+                        armour_list.append((ring_key, ring_value))
+            if value is None and key != "Rings":
+                value = x
+                armour_list.append((key, value))
+            else:
+                armour_list.append((key, value))
+
+        weapon_list = []
+        print(self.character["Items"]["Weapons"])
+        for key, value in self.character["Items"]["Weapons"].items():
+            if key == "Weapon_Slots":
+                for weapon_key, weapon_value in self.character["Items"]["Weapons"]["Weapon_Slots"].items():
+                    if weapon_value is None:
+                        weapon_value = x
+                        weapon_list.append((weapon_key, weapon_value))
+                    else:
+                        weapon_list.append((weapon_key, weapon_value))
+            elif value is None and key != "Bag":
+                value = x
+                weapon_list.append((key, value))
+
+            elif key != "Bag":
+                weapon_list.append((key, value))
+
+        bag_list = []
+        bag_queue = self.character["Items"]["Weapons"]["Bag"]
+        for i in range(bag_queue.qsize()):
+            item = bag_queue.get()
+            bag_list.append(item.name)
+        while len(bag_list) < 10:
+            bag_list.append(None)
+
+        return armour_list, weapon_list, bag_list
