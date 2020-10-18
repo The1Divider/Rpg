@@ -3,7 +3,7 @@ import time
 from Sprites import *
 from InventorySystem import *
 
-Inv = Inventory()
+inv = Inventory()
 
 
 def start_menu():
@@ -11,16 +11,13 @@ def start_menu():
     while True:
         selection = input(">").lower()
         if selection in ["1", "new game"]:
-            Inv().new_player()
+            inv.new_player()
             return main_menu()
-
         elif selection in ["2", "load game"]:
-            Inv().load_player()
+            inv.load_player()
             return main_menu()
-
         elif selection in ["3", "help"]:
             break
-
         elif selection in ["4", "quit", "exit", "stop"]:
             quit()
 
@@ -31,26 +28,20 @@ def main_menu():
         selection = input(">").lower()
         if selection in ["1", "quest"]:
             start_game()
-
         elif selection in ["2", "inventory"]:
             inventory_display()
-
         elif selection in ["3", "shop"]:
             break
-
         elif selection in ["4", "stats"]:
             break
 
         elif selection in ["5", "load", "save"]:
             if selection == "5":
                 selection = input("Load or save a character file?:\n").lower()
-
             if selection == "save":
-                Inv().save_player()
-
+                inv.save_player()
             elif selection == "load":
-                Inv().load_player()
-
+                inv.load_player()
             print(Menus.main_menu)
 
         elif selection in ["6", "exit", "quit", "stop"]:
@@ -61,13 +52,13 @@ def main_menu():
 
 
 def inventory_display():
-    armour_list, weapon_list, bag_list = Inv().inventory_setup()
-    print(armour_list)
-    armour = Menus.InventoryMenus.inventory_armour_menu(armour_list[0].name, armour_list[1].name, armour_list[2].name,
-                                                        armour_list[3].name, armour_list[4].name, armour_list[5].name)
-    weapon = Menus.InventoryMenus.inventory_weapon_menu(weapon_list[0].name, weapon_list[1].name, weapon_list[2])
-    bag = Menus.InventoryMenus.inventory_bag_menu(bag_list[0], bag_list[1], bag_list[2], bag_list[3], bag_list[4],
-                                                  bag_list[5], bag_list[6], bag_list[7], bag_list[8], bag_list[9])
+    inv.inventory_setup()
+    a, w, b = inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp
+    armour = Menus.InventoryMenus.inventory_armour_menu(a[0].name, a[1].name, a[2].name,
+                                                        a[3].name, a[4].name, a[5].name)
+    weapon = Menus.InventoryMenus.inventory_weapon_menu(w[0].name, w[1].name, w[2])
+    bag = Menus.InventoryMenus.inventory_bag_menu(b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9])
+    del inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp, a, w, b
 
     def armour_menu():
         print(armour)

@@ -48,15 +48,9 @@ class Inventory:
         self.Weapons = Weapons()
         self.Stats = Stats()
         self.Levels = Levels()
-
         self.bag = queue.Queue(maxsize=self.queue_max_size)
-        self.armour_list = [self.Armour.helmet, self.Armour.chestplate, self.Armour.leggings,
-                            self.Armour.boots, self.Armour.ring1, self.Armour.ring2]
-        self.weapon_list = [self.Weapons.weapon1, self.Weapons.weapon2, self.Weapons.quiver]
-
-
-    def __call__(self):
-        return self
+        self.armour_slots = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
+        self.weapon_slots = ["weapon1", "weapon2", "quiver"]
 
     def new_player(self):
         self.Armour.ring1 = ItemList.wedding_ring
@@ -69,6 +63,14 @@ class Inventory:
             bag_queue.put(bag_item)
             bag_item = bag_queue.get()
         return bag_item
+
+    @property
+    def armour_list(self):
+        return [getattr(self.Armour, attribute) for attribute in self.armour_slots]
+
+    @property
+    def weapon_list(self):
+        return [getattr(self.Weapons, attribute) for attribute in self.weapon_slots]
 
     # this still needs to be fixed
     def load_player(self):
@@ -134,27 +136,27 @@ class Inventory:
     def inventory_setup(self):
         x = self.NoItem()  # Placeholder for a .name attribute if no item
 
-        armour_list = []
+
+        self.armour_list_temp = []
         for item in self.armour_list:
             if item is None:
                 item = x
-            armour_list.append(item)
+            self.armour_list_temp.append(item)
 
-        weapon_list = []
+        self.weapon_list_temp = []
         for item in self.weapon_list:
             if item is None:
                 item = x
-            weapon_list.append(item)
+            self.weapon_list_temp.append(item)
 
         # Lists items in bag without mutating the queue
-        bag_list = []
+        self.bag_list_temp = []
         bag_queue = self.bag
         for _ in range(bag_queue.qsize()):
             temp = bag_queue.get()
             item = temp
             bag_queue.put(temp)
-            bag_list.append(item.name)
-        while len(bag_list) < self.queue_max_size:
-            bag_list.append(None)
+            self.bag_list_temp.append(item.name)
+        while len(self.bag_list_temp) < self.queue_max_size:
+            self.bag_list_temp.append(None)
 
-        return armour_list, weapon_list, bag_list
