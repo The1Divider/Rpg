@@ -1,8 +1,6 @@
-import random
-import time
 from Sprites import *
 from InventorySystem import *
-
+from Game import start_game
 inv = Inventory()
 
 
@@ -54,10 +52,9 @@ def main_menu():
 def inventory_display():
     inv.inventory_setup()
     a, w, b = inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp
-    armour = Menus.InventoryMenus.inventory_armour_menu(a[0].name, a[1].name, a[2].name,
-                                                        a[3].name, a[4].name, a[5].name)
-    weapon = Menus.InventoryMenus.inventory_weapon_menu(w[0].name, w[1].name, w[2])
-    bag = Menus.InventoryMenus.inventory_bag_menu(b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9])
+    armour = Menus.InventoryMenus.inventory_armour_menu(a)
+    weapon = Menus.InventoryMenus.inventory_weapon_menu(w)
+    bag = Menus.InventoryMenus.inventory_bag_menu(b)
     del inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp, a, w, b
 
     def armour_menu():
@@ -121,34 +118,15 @@ def inventory_display():
                 selection = input("1) Select Item, 2) Previous Page, 3) Exit\n")
 
         if selection == 1:
-            pass
+            return main_menu()
         elif selection == 2:
             return weapon_menu()
         elif selection == 3:
             return main_menu()
-
     armour_menu()
 
 
-def start_game():
-    print(Landscapes.main_village)
-    print("You start your adventure in the village")
-    start_choice = input("Which direction would you like to go?\n").lower()
-    while start_choice not in ["north", "south", "east", "west", "nowhere"]:
-        start_choice = input("Invalid direction (north, south, east, west)\n")
 
-    if start_choice == "nowhere":
-        lazy_selection = random.randint(1, 4)
-        if lazy_selection == 1:
-            print("You decide to take a nap")
-        elif lazy_selection == 2:
-            print("You sit down and start playing with the grass")
-        elif lazy_selection == 3:
-            print("Someone hits you in the head with a rock")
-        elif lazy_selection == 4:
-            print("Your neighbor reports you for soliciting")
-        time.sleep(.5)
-        main_menu()
 
 
 if __name__ == "__main__":
