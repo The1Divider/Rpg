@@ -167,4 +167,3 @@ class Enemies:
                      "    `+'(  (   \\    ) \n" \
                      "       //  \\   |_./  \n" \
                      "     '~' '~----'      \n"
-print(Landscapes.mountain_range)
