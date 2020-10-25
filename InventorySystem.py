@@ -63,6 +63,7 @@ class Inventory:
         """give new player preset items"""
         self.Armour.ring1 = ItemList.wedding_ring
         self.bag.put(ItemList.rock)
+        self.Armour.helmet = ItemList.straw_sunhat
 
     def get_item(self, item):
         """iterate through items in bag to get specified item"""
@@ -81,16 +82,26 @@ class Inventory:
     def weapon_list(self):
         return [getattr(self.Weapons, attribute) for attribute in self.weapon_slots]
 
-    # this still needs to be fixed
     def load_player(self):
         with open("character.json", "r") as f:
             player = json.load(f)
             f.close()
-        player_bag = player["Items"]["Bag"]
-        items = player_bag
+
+        player_dict_keys = ["Weapons", "Armour"]
+        player_dicts = [player[key] for key in player_dict_keys]
+        for subdict in player_dicts:
+            dict_keys = player_dict_keys[player_dicts.index(subdict)]
+            for key, value in subdict.items():
+                if value is not None and key != "Quiver":
+                    key = key.lower()
+                    value = value["Name"].lower().replace(" ", "_")
+                    exec(f"self.{dict_keys}.{key} = ItemList.{value}")
+        self.Weapons.quiver = player["Weapons"]["Quiver"]
+
+        items = player["Bag"]
         player_bag = queue.Queue(maxsize=10)
         for item in items:
-            item_name = item["Name"].lower().replace(" ", "_").replace("-", "_")
+            item_name = item["Name"].lower().replace(" ", "_")
             item = eval("ItemList.{}".format(item_name))
             player_bag.put(item)
         Inventory()
@@ -135,15 +146,16 @@ class Inventory:
             f.close()
             print("Success!")
 
-    class NoItem:
-        """Placeholder for attribute of a nonexistent item"""
-        def __init__(self):
-            self.name = None
-
     def inventory_setup(self):
         """Create instances of armour and items to send to inventory display w/o mutating the inventory.
            Also copies items in bag to prevent having to return them"""
-        x = self.NoItem()
+
+        class NoItem:
+            """Placeholder for attribute of a nonexistent item"""
+            def __init__(self):
+                self.name = None
+
+        x = NoItem()
 
         for item in self.armour_list:
             if item is None:
