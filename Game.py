@@ -12,6 +12,7 @@ class Displacement:
         self.west = 0
         self.south = 0
         self.east = 0
+        self.village = None
         self.directions = {'n': [i for i in range(45, 135)],
                            'w': [i for i in range(135, 225)],
                            's': [i for i in range(225, 315)],
@@ -21,11 +22,13 @@ class Displacement:
         exec(f"self.%s += 1" % direction)
         vertical = self.north - self.south
         horizontal = self.east - self.west
-        if horizontal == 0:
+        if horizontal + vertical == 0:
+            return self.village
+        elif horizontal == 0:
             if vertical > 0:
                 direction = 'n'
             elif vertical < 0:
-                direction =  's'
+                direction = 's'
         elif vertical == 0:
             if horizontal > 0:
                 direction = 'e'
@@ -58,11 +61,11 @@ def print_direction(direction: str, first: bool):
     directions = {'n': north_choices, 'w': west_choices, 's': south_choices, 'e': east_choices}
     first_direction = {'n': Landscapes.mountain_range, 'w': None, 's': None, 'e': None}
 
-    if not first:
+    if first:
+        selection = first_direction[direction]
+    else:
         direction = directions[direction]
         selection = direction[random.randint(1, len(direction)) - 1]
-    else:
-        selection = first_direction[direction]
     return selection
 
 
@@ -78,12 +81,17 @@ def start_game():
     if choice == "nowhere":
         print(lazy_choices[random.randint(1, 4) - 1])
         time.sleep(.5)
-        return main_menu()
+        return
     else:
         alive = True
 
     while alive:
-        print(move(choice))
+        moved = move(choice)
+        if moved is None:
+            print("You've returned to the village")
+            return
+        else:
+            print(moved)
         time.sleep(.5)
         choice = input("Which direction would you like to go?\n").lower()
         while choice not in ["north", "south", "east", "west"]:
