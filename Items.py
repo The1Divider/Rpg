@@ -48,7 +48,7 @@ class ItemList:
     item_list = ["Rock", "Sticky Rock", "Basic Sword", "Copper Sword", "Iron Sword", "Steel Sword",
                  "Diamond-Cut Steel Sword", "Handcrafted Bow"]
 
-    armour_list = ["Straw Sunhat", "Cotton Shirt", "Cotton_pants", "Straw Sandals", "Leather Helmet", "Leather Tunic",
+    armour_list = ["Straw Sunhat", "Cotton Shirt", "Cotton Pants", "Straw Sandals", "Leather Helmet", "Leather Tunic",
                    "Leather Leggings", "Leather Boots", "Wedding Ring"]
 
     rock = Tagging.Item(item_list[0], "weapon", 1, 1, 0, 0, "", 0, Tagging.Hidden(1, None, False))
@@ -64,13 +64,13 @@ class ItemList:
 
     straw_sunhat = Tagging.Armour(armour_list[0], "helmet", 1, 0, "", 1, Tagging.Hidden(9, None, True))
     cotton_shirt = Tagging.Armour(armour_list[1], "chestplate", 1, 0, "", 1, Tagging.Hidden(10, None, True))
-    cotton_pants = Tagging.Armour(armour_list[2], "pants", 1, 0, "", 1, Tagging.Hidden(11, None, True))
-    straw_sandals = Tagging.Armour(armour_list[3], "shoes", 1, 0, "", 1, Tagging.Hidden(12, None, True))
+    cotton_pants = Tagging.Armour(armour_list[2], "leggings", 1, 0, "", 1, Tagging.Hidden(11, None, True))
+    straw_sandals = Tagging.Armour(armour_list[3], "boots", 1, 0, "", 1, Tagging.Hidden(12, None, True))
 
     leather_helmet = Tagging.Armour(armour_list[4], "helmet", 2, 10, "", 3, Tagging.Hidden(13, 5, True))
     leather_tunic = Tagging.Armour(armour_list[5], "chestplate", 5, 15, "", 5, Tagging.Hidden(14, 5, True))
-    leather_leggings = Tagging.Armour(armour_list[6], "pants", 2, 10, "", 3, Tagging.Hidden(15, 5, True))
-    leather_boots = Tagging.Armour(armour_list[7], "shoes", 2, 5, "", 2, Tagging.Hidden(16, 5, True))
+    leather_leggings = Tagging.Armour(armour_list[6], "leggings", 2, 10, "", 3, Tagging.Hidden(15, 5, True))
+    leather_boots = Tagging.Armour(armour_list[7], "boots", 2, 5, "", 2, Tagging.Hidden(16, 5, True))
 
     wedding_ring_tag = "Your last memory of the real world"
     wedding_ring = Tagging.Armour(armour_list[8], "ring", 0, 0, wedding_ring_tag, 0, Tagging.Hidden(17, None, False))
