@@ -98,6 +98,10 @@ class Inventory:
                     exec(f"self.{dict_keys}.{key} = ItemList.{value}")
         self.Weapons.quiver = player["Weapons"]["Quiver"]
 
+        stats = player["Stats"]
+        for key, value in stats.items():
+            exec(f"self.Stats.{key.lower()} = {value}")
+
         items = player["Bag"]
         player_bag = queue.Queue(maxsize=10)
         for item in items:
@@ -122,25 +126,23 @@ class Inventory:
             item = bag_queue.get()
             hidden = item.hidden.hidden_template
             item = item.item_template
-            item["Hidden"] = hidden
+            item["HiddenStats"] = hidden
             bag.append(item)
 
-        for key, armour in armour_dict.items():
-            if armour is not None:
-                hidden = armour.hidden.hidden_template
-                item = armour.armour_template
-                item["Hidden"] = hidden
-                armour_dict[key] = item
-
-        for key, weapon in weapon_dict.items():
-            if weapon is not None and key != "Quiver":
-                hidden = weapon.hidden.hidden_template
-                item = weapon.item_template
-                item["Hidden"] = hidden
-                weapon_dict[key] = item
+        dicts = [("weapon", weapon_dict), ("armour", armour_dict)]
+        for subdict in dicts:
+            for key, value in subdict[1].items():
+                if value is not None and key != "Quiver":
+                    print(key, value.name)
+                    hidden = value.hidden.hidden_template
+                    print(f"value = {value}")
+                    print(f"value.armour_template = {value.armour_template}")
+                    item = exec(f"{value}.{subdict[0]}_template")
+                    item["Hidden"] = hidden
+                    subdict[1][key] = item
 
         with open("character.json", "w") as f:
-            player = {"Armour": armour_dict, "Weapons": weapon_dict, "Bag": bag,
+            player = {"ArmourStats": armour_dict, "Weapons": weapon_dict, "Bag": bag,
                       "Stats": stat_dict, "Levels": level_dict}
             json.dump(player, f, indent=2)
             f.close()

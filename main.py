@@ -62,7 +62,7 @@ def inventory_display():
         selection = None
         while selection not in [1, 2, 3]:
             try:
-                selection = int(input("1) Select Item, 2) Next Page, 3) Exit\n"))
+                selection = int(input("1) Select ItemStats, 2) Next Page, 3) Exit\n"))
                 if selection in [1, 2, 3]:
                     break
                 else:
@@ -81,7 +81,7 @@ def inventory_display():
         print(weapon)
         while True:
             try:
-                selection = int(input("1) Select Item, 2) Next Page 3) Previous Page, 4) Exit\n"))
+                selection = int(input("1) Select ItemStats, 2) Next Page 3) Previous Page, 4) Exit\n"))
                 if selection in [1, 2, 3, 4]:
                     break
                 else:
@@ -103,7 +103,7 @@ def inventory_display():
         selection = None
         while selection not in [1, 2, 3]:
             try:
-                selection = int(input("1) Select Item, 2) Previous Page, 3) Exit\n"))
+                selection = int(input("1) Select ItemStats, 2) Previous Page, 3) Exit\n"))
                 if selection in [1, 2, 3]:
                     break
                 else:
