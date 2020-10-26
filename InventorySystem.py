@@ -117,7 +117,7 @@ class Inventory:
         armour_dict = {"Helmet": arm.helmet, "Chestplate": arm.chestplate, "Leggings": arm.leggings,
                        "Boots": arm.boots, "Ring1": arm.ring1, "Ring2": arm.ring2}
         weapon_dict = {"Weapon1": wep.weapon1, "Weapon2": wep.weapon2, "Quiver": wep.quiver}
-        stat_dict = {"Hp": stat.hp, "Dmg": stat.dmg, "Def": stat.defence, "Crit": stat.crit, "Block": stat.block}
+        stat_dict = {"Hp": stat.hp, "Dmg": stat.dmg, "Defence": stat.defence, "Crit": stat.crit, "Block": stat.block}
         level_dict = {"Difficulty": lev.difficulty, "Enemy Level": lev.enemy_level, "Player Level": lev.player_level}
         bag = []
         bag_queue = self.bag
@@ -126,23 +126,23 @@ class Inventory:
             item = bag_queue.get()
             hidden = item.hidden.hidden_template
             item = item.item_template
-            item["HiddenStats"] = hidden
+            item["Hidden"] = hidden
             bag.append(item)
 
         dicts = [("weapon", weapon_dict), ("armour", armour_dict)]
         for subdict in dicts:
             for key, value in subdict[1].items():
                 if value is not None and key != "Quiver":
-                    print(key, value.name)
                     hidden = value.hidden.hidden_template
-                    print(f"value = {value}")
-                    print(f"value.armour_template = {value.armour_template}")
-                    item = exec(f"{value}.{subdict[0]}_template")
+                    if subdict[0] == "weapon":
+                        item = value.weapon_template
+                    else:
+                        item = value.armour_template
                     item["Hidden"] = hidden
                     subdict[1][key] = item
 
         with open("character.json", "w") as f:
-            player = {"ArmourStats": armour_dict, "Weapons": weapon_dict, "Bag": bag,
+            player = {"Armour": armour_dict, "Weapons": weapon_dict, "Bag": bag,
                       "Stats": stat_dict, "Levels": level_dict}
             json.dump(player, f, indent=2)
             f.close()
