@@ -1,6 +1,18 @@
 {
   "Armour": {
-    "Helmet": null,
+    "Helmet": {
+      "Name": "Straw Sunhat",
+      "Item_Type": "helmet",
+      "Hp": 1,
+      "Defence": 0,
+      "Special": "",
+      "Price": 1,
+      "Hidden": {
+        "Item_Id": 9,
+        "Req_Level": null,
+        "Sellable": true
+      }
+    },
     "Chestplate": null,
     "Leggings": null,
     "Boots": null,
