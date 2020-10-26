@@ -10,10 +10,10 @@ def start_menu():
         selection = input(">").lower()
         if selection in ["1", "new game"]:
             inv.new_player()
-            return main_menu()
+            main_menu()
         elif selection in ["2", "load game"]:
             inv.load_player()
-            return main_menu()
+            main_menu()
         elif selection in ["3", "help"]:
             break
         elif selection in ["4", "quit", "exit", "stop"]:
@@ -26,8 +26,9 @@ def main_menu():
         selection = input(">").lower()
         if selection in ["1", "quest"]:
             start_game()
+            print(Menus.main_menu)
         elif selection in ["2", "inventory"]:
-            inventory_display()
+            return inventory_display()
         elif selection in ["3", "shop"]:
             break
         elif selection in ["4", "stats"]:
@@ -63,14 +64,12 @@ def inventory_display():
         while selection not in [1, 2, 3]:
             try:
                 selection = int(input("1) Select Item, 2) Next Page, 3) Exit\n"))
-                if selection not in [1, 2, 3]:
-                    print("Invalid Selection")
-                    selection = input("1) Select Item, 2) Next Page, 3) Exit\n")
-                else:
+                if selection in [1, 2, 3]:
                     break
+                else:
+                    raise ValueError
             except ValueError:
                 print("Invalid Selection")
-                selection = input("1) Select Item, 2) Next Page, 3) Exit\n")
 
         if selection == 1:
             pass
@@ -84,14 +83,12 @@ def inventory_display():
         while True:
             try:
                 selection = int(input("1) Select Item, 2) Next Page 3) Previous Page, 4) Exit\n"))
-                if selection not in [1, 2, 3, 4]:
-                    print("Invalid Selection")
-                    selection = input("1) Select Item, 2) Next Page, 3) Previous Page, 4) Exit\n")
-                else:
+                if selection in [1, 2, 3, 4]:
                     break
+                else:
+                    raise ValueError
             except ValueError:
                 print("Invalid Selection")
-                selection = input("1) Select Item, 2) Next Page, 3) Previous Page, 4) Exit\n")
 
         if selection == 1:
             pass
@@ -108,14 +105,12 @@ def inventory_display():
         while selection not in [1, 2, 3]:
             try:
                 selection = int(input("1) Select Item, 2) Previous Page, 3) Exit\n"))
-                if selection not in [1, 2, 3]:
-                    print("Invalid Selection")
-                    selection = input("1) Select Item, 2) Previous Page, 3) Exit\n")
-                else:
+                if selection in [1, 2, 3]:
                     break
+                else:
+                    raise ValueError
             except ValueError:
                 print("Invalid Selection")
-                selection = input("1) Select Item, 2) Previous Page, 3) Exit\n")
 
         if selection == 1:
             return main_menu()
@@ -124,9 +119,6 @@ def inventory_display():
         elif selection == 3:
             return main_menu()
     armour_menu()
-
-
-
 
 
 if __name__ == "__main__":
