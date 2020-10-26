@@ -18,6 +18,8 @@ def start_menu():
             break
         elif selection in ["4", "quit", "exit", "stop"]:
             quit()
+        else:
+            print("Invalid selection")
 
 
 def main_menu():
@@ -33,7 +35,6 @@ def main_menu():
             break
         elif selection in ["4", "stats"]:
             break
-
         elif selection in ["5", "load", "save"]:
             if selection == "5":
                 selection = input("Load or save a character file?:\n").lower()
@@ -42,10 +43,8 @@ def main_menu():
             elif selection == "load":
                 inv.load_player()
             print(Menus.main_menu)
-
         elif selection in ["6", "exit", "quit", "stop"]:
             quit()
-
         else:
             print("Invalid selection")
 
