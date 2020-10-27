@@ -35,17 +35,16 @@ class Menus:
 
         @staticmethod
         def inventory_armour_menu(armour_list: list):
-            for i in armour_list:
-                helmet, chest, leg, boots, ring1, ring2 = armour_list
+            helmet, chest, leg, boots, ring1, ring2 = armour_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Armour |\n"
             menu_line3 = "|-------------------------------|\n"
-            menu_line4 = "| Helmet   | {} |\n".format(helmet.name)
-            menu_line5 = "| Chest    | {} |\n".format(chest.name)
-            menu_line6 = "| Leggings | {} |\n".format(leg.name)
-            menu_line7 = "| Boots    | {} |\n".format(boots.name)
-            menu_line8 = "| Ring 1   | {} |\n".format(ring1.name)
-            menu_line9 = "| Ring 2   | {} |\n".format(ring2.name)
+            menu_line4 = f"| Helmet     | {helmet.name} |\n"
+            menu_line5 = f"| Chestplate | {chest.name} |\n"
+            menu_line6 = f"| Leggings   | {leg.name} |\n"
+            menu_line7 = f"| Boots      | {boots.name} |\n"
+            menu_line8 = f"| Ring 1     | {ring1.name} |\n"
+            menu_line9 = f"| Ring 2     | {ring2.name} |\n"
             menu_line10 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9, menu_line10]
@@ -57,9 +56,9 @@ class Menus:
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
             menu_line3 = "|-------------------------------|\n"
-            menu_line4 = "| Weapon 1 | {} |\n".format(weapon1.name)
-            menu_line5 = "| Weapon 2 | {} |\n".format(weapon2.name)
-            menu_line6 = "| Quiver   | {} |\n".format(quiver)
+            menu_line4 = f"| Weapon 1 | {weapon1.name} |\n"
+            menu_line5 = f"| Weapon 2 | {weapon2.name} |\n"
+            menu_line6 = f"| Quiver   | {quiver} |\n"
             menu_line7 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4,
                          menu_line5, menu_line6, menu_line7]
@@ -71,15 +70,57 @@ class Menus:
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
             menu_line3 = "|-------------------------------|\n"
-            menu_line4 = "| 1 - {} | 2 - {} |\n".format(item1, item2)
-            menu_line5 = "| 3 - {} | 4 - {} |\n".format(item3, item4)
-            menu_line6 = "| 5 - {} | 6 - {} |\n".format(item5, item6)
-            menu_line7 = "| 7 - {} | 8 - {} |\n".format(item7, item8)
-            menu_line8 = "| 9 - {} | 10 - {} |\n".format(item9, item10)
+            menu_line4 = f"| 1 - {item1} | 2 - {item2} |\n"
+            menu_line5 = f"| 3 - {item3} | 4 - {item4} |\n"
+            menu_line6 = f"| 5 - {item5} | 6 - {item6} |\n"
+            menu_line7 = f"| 7 - {item7} | 8 - {item8} |\n"
+            menu_line8 = f"| 9 - {item9} | 10 - {item10} |\n"
             menu_line9 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9]
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9])
+
+        @staticmethod
+        def weapon_selection(weapon):
+            weapon_values_names = ["name", "item_weight", "dmg", "crit", "crit_chance", "special", "price"]
+            weapon_values = [getattr(weapon, attr) for attr in weapon_values_names]
+            name, weight, dmg, crit, crit_chance, special, price = weapon_values
+            if special == "":
+                special = None
+            menu_line1 = " ------------------------------- \n"
+            menu_line2 = f"| {name} |\n"
+            menu_line3 = f"|-------------------------------|\n"
+            menu_line4 = f"| Weight      - {weight} Handed |\n"
+            menu_line5 = f"| Dmg         - {dmg} |\n"
+            menu_line6 = f"| Crit        - {crit} |\n"
+            menu_line7 = f"| Crit Chance - {crit_chance}% |\n"
+            menu_line8 = f"| Price       - {price}$ |\n"
+            menu_line9 = "|-------------------------------|\n"
+            menu_line10 = f"| Special     - {special} |\n"
+            menu_line11 = " ------------------------------- \n"
+            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
+                         menu_line7, menu_line8, menu_line9, menu_line10, menu_line11]
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3,
+                                                                           menu_line9, menu_line11])
+
+        @staticmethod
+        def armour_selection(weapon):
+            armour_values_names = ["name", "hp", "defence", "special", "price"]
+            armour_values = [getattr(weapon, attr) for attr in armour_values_names]
+            name, hp, defence, special, price = armour_values
+            if special == "":
+                special = None
+            menu_line1 = " ------------------------------- \n"
+            menu_line2 = f"| {name} |\n"
+            menu_line3 = f"|-------------------------------|\n"
+            menu_line4 = f"| Hp         - {hp} |\n"
+            menu_line5 = f"| Defence    - {defence} |\n"
+            menu_line6 = f"| Special    - {special} |\n"
+            menu_line7 = f"| Price      - {price}$ |\n"
+            menu_line8 = " ------------------------------- \n"
+            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
+                         menu_line6, menu_line7, menu_line8]
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line8])
 
     shop_menu_main = None
     shop_menu_buy = None
