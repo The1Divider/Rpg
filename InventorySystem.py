@@ -46,7 +46,7 @@ class Levels:
 
 
 class Inventory:
-    def __init__(self, dev_mode: bool):
+    def __init__(self, dev_mode: bool = False):
         self.dev_mode = dev_mode
         self.queue_max_size = 10
         self.Armour = Armour()
