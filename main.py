@@ -1,51 +1,57 @@
 from contextlib import suppress
+from typing import NewType
 from Sprites import *
 from InventorySystem import *
 from Game import *
 
 inv = Inventory()
+exit_list = ["quit", "exit", "stop", "end"]
+Menu = NewType("Menu", Any)
 
 
-def start_menu():
-    option_list = ("1", "new game", "2", "load game", "3", "help", "4", "quit", "exit", "stop", "end")
+def start_menu() -> Any:
+    option_list = ("1", "new game", "2", "load game", "3", "help", "4", *exit_list)
     print(Menus.start_menu)
-    while (selection := input(">")) not in option_list:
+    while (selection := input(">").lower()) not in option_list:
         print(f"Invalid selection: {selection}")
+    with suppress(ValueError):
+        selection = int(selection)
     if type(selection) != int:
         selection = selection.lower()
-    if selection in option_list[0:2]:
+    if selection in [1, "new game"]:
         inv.new_player()
         return main_menu()
-    elif selection in option_list[2:4]:
+    elif selection in [2, "load game"]:
         inv.load_player()
         return main_menu()
-    elif selection in option_list[4:6]:
+    elif selection in [3, "help"]:
         pass
-    elif selection in option_list[6:]:
+    elif selection in [4, *exit_list]:
         quit()
 
 
-def main_menu():
+def main_menu() -> Any:
     option_list = ("1", "quest", "2", "inventory", "3", "shop", "4", "stats", "5", "load", "save",
-                   "6", "quit", "stop", "end", "exit", "code")
+                   "6", *exit_list, "code")
     print(Menus.main_menu)
-    while (selection := input(">")) not in option_list:
+    while (selection := input(">").lower()) not in option_list:
         print(f"Invalid selection: {selection}")
-    if type(selection) != int:
-        selection = selection.lower()
 
-    if selection in option_list[0:2]:
+    with suppress(ValueError):
+        selection = int(selection)
+
+    if selection in [1, "quest"]:
         start_game(inv.Stats, inv.Weapons, inv.Armour, inv.Levels)
         return main_menu()
-    elif selection in option_list[2:4]:
+    elif selection in [2, "inventory"]:
         inventory_display()
         return main_menu()
-    elif selection in option_list[4:6]:
+    elif selection in [3, "shop"]:
         pass
-    elif selection in option_list[6:8]:
-        pass
-    elif selection in option_list[8:11]:
-        if selection == "5":
+    elif selection in [4, "stats"]:
+        stats_display()
+    elif selection in [5, "save", "load"]:
+        if selection not in ["save", "load"]:
             while selection := input("Load or save a character file?:\n").lower() not in ("save", "load"):
                 print("Invalid selection")
         if selection == "save":
@@ -53,9 +59,9 @@ def main_menu():
         elif selection == "load":
             inv.load_player()
         return main_menu()
-    elif selection in option_list[11:16]:
+    elif selection in [6, *exit_list]:
         quit()
-    elif selection == option_list[16]:
+    elif selection == "code":
         with open("DevCode.txt", 'r') as f:
             code = str(f.read())
         inp = input("Enter code")
@@ -64,16 +70,16 @@ def main_menu():
         return main_menu()
 
 
-def inventory_display():
+def inventory_display() -> Any:
     inv.inventory_setup()
     a, w, b = inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp
     armour = Menus.InventoryMenus.inventory_armour_menu(a)
     weapon = Menus.InventoryMenus.inventory_weapon_menu(w)
     bag = Menus.InventoryMenus.inventory_bag_menu(b)
     del a, w, b
-    inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp = [], [], []
+    inv.armour_list_temp, inv.weapon_list_temp = [], []
 
-    def armour_menu():
+    def armour_menu() -> Menu:
         input_message = "1) Select Item, 2) Next Page, 3) Exit\n"
         print(armour)
         while (selection := input(input_message)) not in ("1", "2", "3"):
@@ -100,9 +106,10 @@ def inventory_display():
         elif selection == "2":
             return weapon_menu()
         elif selection == "3":
+            inv.bag_list_temp = []
             return main_menu()
 
-    def weapon_menu():
+    def weapon_menu() -> Menu:
         input_message = "1) Select Item, 2) Next Page 3) Previous Page, 4) Exit\n"
         print(weapon)
         while (selection := input(input_message)) not in ("1", "2", "3", "4"):
@@ -110,7 +117,7 @@ def inventory_display():
 
         if selection == "1":
             weapon_selection = input("Selection: ").lower()
-            if weapon_selection in ("weapon 1, weapon 2"):
+            if weapon_selection in ("weapon 1", "weapon 2"):
                 weapon_selection = weapon_selection.replace(" ", "")
             if weapon_selection in ("weapon1", "weapon2"):
                 print(Menus.InventoryMenus.weapon_selection(getattr(inv.Weapons, weapon_selection)))
@@ -135,23 +142,42 @@ def inventory_display():
         elif selection == "3":
             return armour_menu()
         elif selection == "4":
+            inv.bag_list_temp = []
             return main_menu()
 
-    def bag_menu():
+    def bag_menu() -> Menu:
+        item = None
         input_message = "1) Select Item, 2) Previous Page, 3) Exit\n"
         print(bag)
         while (selection := input(input_message)) not in ("1", "2", "3"):
             print("Invalid Selection")
-
         if selection == "1":
-            # to do: all items in bag should(?) be weapons
-            return main_menu()
+            bag_list = inv.bag_list_temp
+            while (weapon_selection := input("Selection: ").lower().replace(" ", "_"))\
+                    not in [*[i.lower() for i in bag_list if i is not None], *[str(i) for i in range(1, 11)]]:
+                print("Invalid selection")
+            item = inv.get_item(weapon_selection)
+
+            if item is not None:
+                menu = Menus.InventoryMenus.weapon_selection(inv.get_item(item))
+                print(menu)
+            return bag_menu()
+
         elif selection == "2":
             return weapon_menu()
         elif selection == "3":
+            inv.bag_list_temp = []
             return main_menu()
     armour_menu()
 
+
+def stats_display():
+    inv.stats_setup()
+    stats_list = inv.stat_list_temp
+    stat_display = Menus.InventoryMenus.stats_menu(stats_list)
+    print(stat_display)
+    del stats_list
+    return main_menu()
 
 if __name__ == "__main__":
     start_menu()
