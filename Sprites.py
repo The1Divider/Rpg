@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from typing import Any, Type
+
+
 class Menus:
     start_menu = "------------------\n" \
                  "    Epic RPG      \n" \
@@ -19,7 +24,7 @@ class Menus:
 
     class InventoryMenus:
         @staticmethod
-        def inventory_menu_spacing(menu_list, special_list):
+        def inventory_menu_spacing(menu_list: list[str], special_list: list[str]) -> str:
             """Method to align inventory display regardless of item name size"""
             max_length = len(max(menu_list, key=len))
             for i in menu_list:
@@ -34,7 +39,31 @@ class Menus:
             return "".join(menu_list)
 
         @staticmethod
-        def inventory_armour_menu(armour_list: list):
+        def stats_menu(stats_list: list) -> Any:
+            # pass stats along with player_level + player_exp
+            hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, block, level, exp, exp_percent = stats_list
+            exp_bars = "".join(["*" for i in range(int(exp_percent) // 10)])
+            while len(exp_bars) < 10:
+                exp_bars += "-"
+            menu_line1 = " ------------------------------- \n"
+            menu_line2 = "| Stats |\n"
+            menu_line3 = "|-------------------------------|\n"
+            menu_line4 = f"| Level | {level} |\n"
+            menu_line5 = f"| Exp   | [{exp_bars}] |\n"
+            menu_line6 = "|-------------------------------|\n"
+            menu_line7 = f"| Hp      | {hp} + {armour_hp} |\n"
+            menu_line8 = f"| Dmg     | {dmg} + {weapon_dmg} |\n"
+            menu_line9 = f"| Defence | {defence} + {armour_defence} |\n"
+            menu_line10 = f"| Crit    | {crit} + {weapon_crit} |\n"
+            menu_line11 = f"| Block   | {block} |\n"
+            menu_line12 = " ------------------------------- \n"
+            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
+                         menu_line7, menu_line8, menu_line9, menu_line10, menu_line11, menu_line12]
+            return Menus.InventoryMenus.inventory_menu_spacing(menu_list,
+                                                               [menu_line1, menu_line3, menu_line6, menu_line12])
+
+        @staticmethod
+        def inventory_armour_menu(armour_list: list) -> Any:
             helmet, chest, leg, boots, ring1, ring2 = armour_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Armour |\n"
@@ -51,7 +80,7 @@ class Menus:
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line10])
 
         @staticmethod
-        def inventory_weapon_menu(weapon_list: list):
+        def inventory_weapon_menu(weapon_list: list) -> Any:
             weapon1, weapon2, quiver = weapon_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
@@ -65,7 +94,7 @@ class Menus:
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line7])
 
         @staticmethod
-        def inventory_bag_menu(item_list: list):
+        def inventory_bag_menu(item_list: list) -> Any:
             item1, item2, item3, item4, item5, item6, item7, item8, item9, item10 = item_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
@@ -78,10 +107,10 @@ class Menus:
             menu_line9 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9]
-            return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9])
+            return str(Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9]))
 
         @staticmethod
-        def weapon_selection(weapon):
+        def weapon_selection(weapon: Type) -> Any:
             weapon_values_names = ["name", "item_weight", "dmg", "crit", "crit_chance", "special", "price"]
             weapon_values = [getattr(weapon, attr) for attr in weapon_values_names]
             name, weight, dmg, crit, crit_chance, special, price = weapon_values
@@ -104,7 +133,7 @@ class Menus:
                                                                            menu_line9, menu_line11])
 
         @staticmethod
-        def armour_selection(weapon):
+        def armour_selection(weapon: Type) -> str:
             armour_values_names = ["name", "hp", "defence", "special", "price"]
             armour_values = [getattr(weapon, attr) for attr in armour_values_names]
             name, hp, defence, special, price = armour_values
@@ -136,7 +165,8 @@ class Landscapes:
                    " /  | |    ____     /          \\\n" \
                    "/______\\  /    \\     |   __   |\n" \
                    "|  _   |  |    |     |  |  |  | \n" \
-                   "| | |  |  | [] |     |  |  |  |  \n"
+                   "| | |  |  | [] |     |  |  |  |  \n" \
+                   "You start your adventure in the village"
 
     mountain = "       /\\         \n" \
                "      /AA\\        \n" \
@@ -156,7 +186,7 @@ class Landscapes:
                      " /    \\ \\    /        \\ \n" \
                      "/      \\ \\  /          \\\n"
 
-    blocked_mountain = "       /\\         \n" \
+    mountain_blocked = "       /\\         \n" \
                        "      /AA\\        \n" \
                        "     /-\\/-\\      \n" \
                        "    /      \\      \n" \
@@ -165,6 +195,12 @@ class Landscapes:
                        " /    {OO}    \\   \n" \
                        "/____/OOOO\\____\\ \n"
 
+    forest = "     //\\   8989898      /\\             \n" \
+             "  /\\////\\989898989898  //\\\\          \n" \
+             "/\\//////\\8989898989898///\\\\\\        \n" \
+             "/\\\\///\\/\\\\8989898989 ////\\\\\\\\   \n" \
+             "||////\\\\\\\\\\98{ 9}89 /////\\\\\\\\\\ \n" \
+             "||  || ||    {  }       ||               \n"
     tree1 = "        \n" \
             "        \n" \
             "        \n" \
