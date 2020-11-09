@@ -1,4 +1,6 @@
 import json
+from typing import Any, List
+
 from Items import ItemList
 import queue
 from dataclasses import dataclass
@@ -7,7 +9,8 @@ from dataclasses import dataclass
 @dataclass()
 class Armour:
     """Set player armour attributes"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.helmet = None
         self.chestplate = None
         self.leggings = None
@@ -19,7 +22,8 @@ class Armour:
 @dataclass()
 class Weapons:
     """Set player weapon attributes"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.weapon1 = None
         self.weapon2 = None
         self.quiver = 0
@@ -28,7 +32,8 @@ class Weapons:
 @dataclass()
 class Stats:
     """Set player stats attributes"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.hp = 10
         self.dmg = 1
         self.defence = 0
@@ -39,14 +44,18 @@ class Stats:
 @dataclass()
 class Levels:
     """Set player level attributes"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.difficulty = None
-        self.enemy_level = 1
         self.player_level = 1
+        self.player_exp = 0
 
 
 class Inventory:
-    def __init__(self, dev_mode: bool = False):
+    def __init__(self, dev_mode: bool = False) -> None:
+        self.exp_bar = None
+        self.required_exp_percent = 0
+        self.required_exp = 0
         self.dev_mode = dev_mode
         self.queue_max_size = 10
         self.Armour = Armour()
@@ -56,34 +65,49 @@ class Inventory:
         self.bag = queue.Queue(maxsize=self.queue_max_size)
         self.armour_slots = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
         self.weapon_slots = ["weapon1", "weapon2", "quiver"]
+        self.stat_slots = ["hp", "dmg", "defence", "crit", "block"]
         self.armour_list_temp = []
         self.weapon_list_temp = []
         self.bag_list_temp = []
+        self.stat_list_temp = []
 
-    def new_player(self):
+    def new_player(self) -> None:
         """give new player preset items"""
         self.Armour.ring1 = ItemList.wedding_ring
         self.bag.put(ItemList.rock)
         self.Armour.helmet = ItemList.straw_sunhat
 
-    def get_item(self, item):
+    def get_item(self, item: str) -> Any:
         """iterate through items in bag to get specified item"""
+        bag_item_temp = None
         bag_queue = self.bag
+        size = bag_queue.qsize()
         bag_item = bag_queue.get()
-        while bag_item.name != item:
+        print(bag_item.name.lower(), item)
+        while bag_item.name.lower() != item and size > 0:
             bag_queue.put(bag_item)
             bag_item = bag_queue.get()
-        return bag_item
+            size -= 1
+        bag_item_temp = bag_item
+        if bag_item_temp is None:
+            return bag_item_temp
+        else:
+            bag_queue.put(bag_item)
+            return bag_item_temp
 
     @property
-    def armour_list(self):
+    def armour_list(self) -> List:
         return [getattr(self.Armour, attribute) for attribute in self.armour_slots]
 
     @property
-    def weapon_list(self):
+    def weapon_list(self) -> List:
         return [getattr(self.Weapons, attribute) for attribute in self.weapon_slots]
 
-    def load_player(self):
+    @property
+    def stat_list(self) -> List:
+        return [getattr(self.Stats, attribute) for attribute in self.stat_slots]
+
+    def load_player(self) -> None:
         with open("character.json", "r") as f:
             player = json.load(f)
             f.close()
@@ -101,15 +125,15 @@ class Inventory:
 
         stats = player["Stats"]
         for key, value in stats.items():
-            exec(f"self.Stats.{key.lower()} = {value}")
+            setattr(self.Stats, str(value), getattr(self.Stats, key.lower()))
 
         items = player["Bag"]
         player_bag = queue.Queue(maxsize=10)
         for item in items:
             item_name = item["Name"].lower().replace(" ", "_")
-            item = eval("ItemList.{}".format(item_name))
+            item = getattr(ItemList, item_name)
             player_bag.put(item)
-        Inventory()
+        self.bag = player_bag
         print("Success!")
 
     def save_player(self):
@@ -119,7 +143,7 @@ class Inventory:
                        "Boots": arm.boots, "Ring1": arm.ring1, "Ring2": arm.ring2}
         weapon_dict = {"Weapon1": wep.weapon1, "Weapon2": wep.weapon2, "Quiver": wep.quiver}
         stat_dict = {"Hp": stat.hp, "Dmg": stat.dmg, "Defence": stat.defence, "Crit": stat.crit, "Block": stat.block}
-        level_dict = {"Difficulty": lev.difficulty, "Enemy Level": lev.enemy_level, "Player Level": lev.player_level}
+        level_dict = {"Difficulty": lev.difficulty, "Player Level": lev.player_level}
         bag = []
         bag_queue = self.bag
 
@@ -155,6 +179,7 @@ class Inventory:
 
         class NoItem:
             """Placeholder for attribute of a nonexistent item"""
+
             def __init__(self):
                 self.name = None
 
@@ -178,3 +203,36 @@ class Inventory:
             self.bag_list_temp.append(item.name)
         while len(self.bag_list_temp) < self.queue_max_size:
             self.bag_list_temp.append(None)
+
+    def stats_setup(self) -> list:
+
+        def exp() -> (float, int):
+            level_with_decimal = (((100 * (2 * self.Levels.player_exp + 25)) ** (1 / 2)) + 50) / 100
+            next_level = int(level_with_decimal) + 1
+            next_level_exp = (next_level ** 2 + next_level) / 2 * 100 - (next_level * 100)
+
+            required_exp = next_level_exp - self.Levels.player_exp
+            required_exp_percent = self.required_exp / next_level_exp * 100
+            return required_exp, required_exp_percent
+
+        hp, dmg, defence, crit, block = self.Stats.hp, self.Stats.dmg, self.Stats.defence, self.Stats.crit, self.Stats.block
+        armour_hp, armour_defence = 0, 0
+        weapon_dmg, weapon_crit = 0, 0
+        stats = self.stat_list
+        for armour in self.armour_list:
+            try:
+                armour_hp += armour.hp
+                armour_defence += armour.defence
+            except AttributeError:
+                pass
+        for weapon in self.weapon_list:
+            try:
+                weapon_dmg += weapon.dmg
+                weapon_crit += weapon.crit
+            except AttributeError:
+                pass
+
+        exp, exp_percent = exp()
+
+        self.stat_list_temp = [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, block,
+                               self.Levels.player_level, exp, exp_percent]
