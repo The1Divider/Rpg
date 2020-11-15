@@ -1,6 +1,10 @@
-from __future__ import annotations
+from typing import NewType, Callable
 
-from typing import Any, Type
+from Items import Tagging
+
+Spacing = NewType("Spacing", Callable[[list[str], list[str]], str])
+ItemType = Tagging.ItemType
+ArmourType = Tagging.ArmourType
 
 
 class Menus:
@@ -27,24 +31,32 @@ class Menus:
         def inventory_menu_spacing(menu_list: list[str], special_list: list[str]) -> str:
             """Method to align inventory display regardless of item name size"""
             max_length = len(max(menu_list, key=len))
+
             for i in menu_list:
+
                 ind = menu_list.index(i)
+
                 if i in special_list:
                     while len(i) < max_length:
                         i = i[:-2] + "-" + i[-2:]
                         menu_list[ind] = i
+
                 while len(i) < max_length:
                     i = i[:-3] + " " + i[-3:]
                     menu_list[ind] = i
+
             return "".join(menu_list)
 
         @staticmethod
-        def stats_menu(stats_list: list) -> Any:
+        def stats_menu(stats_list: list[int]) -> Spacing:
             # pass stats along with player_level + player_exp
-            hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, block, level, exp, exp_percent = stats_list
-            exp_bars = "".join(["*" for i in range(int(exp_percent) // 10)])
+            hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, block, level, exp, exp_percent\
+                                                                                                            = stats_list
+            exp_bars = "".join(["*" for _ in range(int(exp_percent) // 10)])
+
             while len(exp_bars) < 10:
                 exp_bars += "-"
+
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Stats |\n"
             menu_line3 = "|-------------------------------|\n"
@@ -59,11 +71,12 @@ class Menus:
             menu_line12 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
                          menu_line7, menu_line8, menu_line9, menu_line10, menu_line11, menu_line12]
+
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list,
                                                                [menu_line1, menu_line3, menu_line6, menu_line12])
 
         @staticmethod
-        def inventory_armour_menu(armour_list: list) -> Any:
+        def inventory_armour_menu(armour_list: list[ArmourType]) -> Spacing:
             helmet, chest, leg, boots, ring1, ring2 = armour_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Armour |\n"
@@ -77,10 +90,11 @@ class Menus:
             menu_line10 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9, menu_line10]
+
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line10])
 
         @staticmethod
-        def inventory_weapon_menu(weapon_list: list) -> Any:
+        def inventory_weapon_menu(weapon_list: list[ItemType]) -> Spacing:
             weapon1, weapon2, quiver = weapon_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
@@ -91,10 +105,11 @@ class Menus:
             menu_line7 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4,
                          menu_line5, menu_line6, menu_line7]
+
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line7])
 
         @staticmethod
-        def inventory_bag_menu(item_list: list) -> Any:
+        def inventory_bag_menu(item_list: list[ItemType]) -> Spacing:
             item1, item2, item3, item4, item5, item6, item7, item8, item9, item10 = item_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
@@ -107,15 +122,18 @@ class Menus:
             menu_line9 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8, menu_line9]
+
             return str(Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9]))
 
         @staticmethod
-        def weapon_selection(weapon: Type) -> Any:
+        def weapon_selection(weapon: ItemType) -> Spacing:
             weapon_values_names = ["name", "item_weight", "dmg", "crit", "crit_chance", "special", "price"]
             weapon_values = [getattr(weapon, attr) for attr in weapon_values_names]
             name, weight, dmg, crit, crit_chance, special, price = weapon_values
+
             if special == "":
                 special = None
+
             menu_line1 = " ------------------------------- \n"
             menu_line2 = f"| {name} |\n"
             menu_line3 = f"|-------------------------------|\n"
@@ -129,16 +147,19 @@ class Menus:
             menu_line11 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
                          menu_line7, menu_line8, menu_line9, menu_line10, menu_line11]
+
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3,
                                                                            menu_line9, menu_line11])
 
         @staticmethod
-        def armour_selection(weapon: Type) -> str:
+        def armour_selection(weapon: ArmourType) -> Spacing:
             armour_values_names = ["name", "hp", "defence", "special", "price"]
             armour_values = [getattr(weapon, attr) for attr in armour_values_names]
             name, hp, defence, special, price = armour_values
+
             if special == "":
                 special = None
+
             menu_line1 = " ------------------------------- \n"
             menu_line2 = f"| {name} |\n"
             menu_line3 = f"|-------------------------------|\n"
@@ -149,6 +170,7 @@ class Menus:
             menu_line8 = " ------------------------------- \n"
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
                          menu_line6, menu_line7, menu_line8]
+
             return Menus.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line8])
 
     shop_menu_main = None

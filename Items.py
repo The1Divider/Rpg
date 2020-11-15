@@ -1,6 +1,8 @@
-class Tagging:
-    from dataclasses import dataclass
+from dataclasses import dataclass
+from typing import NewType
 
+
+class Tagging:
     @dataclass
     class Hidden:
         def __init__(self, item_id: int, req_level, sellable: bool):
@@ -10,6 +12,8 @@ class Tagging:
             self.hidden = [item_id, req_level, sellable]
             self.hidden_template = {"Item_Id": self.item_id, "Req_Level": self.req_level,
                                     "Sellable": self.sellable}
+
+    HiddenType = NewType("HiddenType", Hidden)
 
     @dataclass
     class Item:
@@ -25,12 +29,15 @@ class Tagging:
             self.price = price
             self.hidden = hidden
 
-            self.item_template = {"Name": self.name, "Item_type": self.item_type, "Dmg": self.dmg, "Crit": self.crit,
+            self.item_template = {"Name": self.name, "Item_type": self.item_type, "Item_weight": self.item_weight,
+                                  "Dmg": self.dmg, "Crit": self.crit, "Crit_Chance": self.crit_chance,
                                   "Special": self.special, "Price": self.price, "Hidden": self.hidden}
+
+    ItemType = NewType("Item", Item)
 
     @dataclass
     class Armour:
-        def __init__(self, name: str, item_type: str, hp: int, defence: int, special: str, price: int, hidden):
+        def __init__(self, name: str, item_type: str, hp: int, defence: int, special: str, price: int, hidden: Hidden) -> None:
             self.name = name
             self.item_type = item_type
             self.hp = hp
@@ -42,6 +49,8 @@ class Tagging:
             self.armour_template = {"Name": self.name, "Item_Type": self.item_type, "Hp": self.hp,
                                     "Defence": self.defence, "Special": self.special, "Price": self.price,
                                     "Hidden": self.hidden}
+
+    ArmourType = NewType("Armour", Armour)
 
 
 class ItemList:
