@@ -1,5 +1,6 @@
 import json
 import queue
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
@@ -34,6 +35,7 @@ class Weapons:
 class Stats:
     """Set player stats attributes"""
     def __init__(self) -> None:
+        self.crit_chance = None
         self.hp = 10
         self.dmg = 1
         self.defence = 0
@@ -76,38 +78,96 @@ class Inventory:
         self.bag.put(ItemList.rock)
         self.Armour.helmet = ItemList.straw_sunhat
 
-    def get_item(self, item: str) -> Optional[ItemType]:
+    def equip_weapon(self, weapon: str) -> None:
+        to_replace = None
+        item = self.get_item(weapon, select=True)
+        weight_item, weight_slot_1, weight_slot_2 = None, None, None
+
+        with suppress(AttributeError):
+            weight_item = item.item_weight
+            weight_slot_1 = self.Weapons.weapon1.item_weight
+            weight_slot_2 = self.Weapons.weapon2.item_weight
+
+        if item is not None:
+
+            if weight_item == 1 and (weight_slot_1 is None or weight_slot_2 is None):
+                slot = "weapon1" if self.Weapons.weapon1 is None else "weapon2"
+                setattr(self.Weapons, slot, item)
+                return None
+
+            else:
+                while (slot := input(f"Which slot do you want to replace with {item.name}").lower().replace(" ", ""))\
+                        not in ("slot1", "slot2", "cancel"):
+                    print("Invalid slot (slot 1, slot 2, cancel")
+
+                if slot == "slot1":
+                    to_replace = getattr(self.Weapons, "weapon1")
+                    setattr(self.Weapons, "weapon1", item)
+
+                elif slot == "slot2":
+                    to_replace = getattr(self.Weapons, "weapon2")
+                    setattr(self.Weapons, "weapon2", item)
+
+                elif slot == "cancel":
+                    to_replace = item
+
+                self.bag.put(to_replace)
+                return None
+
+            if weight_item == 2 and (self.Weapons.weapon1 is None and self.Weapons.weapon2 is None):
+                setattr(self.Weapons, "weapon1", item)
+
+            else:
+                while (ans := input(f"Do you want to replace your current weapons with {item.name}?\n").lower()) not \
+                        in ("yes", 'y', "no", 'n'):
+                    print("Invalid choice (y/n)")
+
+                if ans in ("yes", 'y'):
+                    weapon_1, weapon_2 = [getattr(self.Weapons, attribute) for attribute in ("weapon1", "weapon2")]
+                    print(weapon_1, weapon_2)
+                    self.bag.put(weapon_1)
+                    self.bag.put(weapon_2)
+                    setattr(self.Weapons, "weapon1", item)
+
+                elif ans in ("no", 'n'):
+                    self.bag.put(item)
+
+                return None
+
+        else:
+            print("Invalid weapon")
+            return None
+
+    def get_item(self, item: str, select: bool = False) -> Optional[ItemType]:
         """iterate through items in bag to get specified item"""
         bag_item_temp = None
         bag_queue = self.bag
         size = bag_queue.qsize()
         bag_item = bag_queue.get()
-        print(bag_item.name.lower(), item)
+        print(bag_item.name.lower(), item, size)
 
         while bag_item.name.lower() != item and size > 0:
             bag_queue.put(bag_item)
             bag_item = bag_queue.get()
             size -= 1
 
-        bag_item_temp = bag_item
-
-        if bag_item_temp is None:
-            return None
-
-        else:
+        if bag_item is not None and not select:
+            bag_item_temp = bag_item
             bag_queue.put(bag_item)
-            return bag_item_temp
+            bag_item = bag_item_temp
+
+        return bag_item
 
     @property
-    def armour_list(self) -> list[ArmourType]:
+    def armour_list(self) -> List[Optional[ArmourType]]:
         return [getattr(self.Armour, attribute) for attribute in self.armour_slots]
 
     @property
-    def weapon_list(self) -> list[ItemType]:
+    def weapon_list(self) -> List[Optional[ItemType]]:
         return [getattr(self.Weapons, attribute) for attribute in self.weapon_slots]
 
     @property
-    def stat_list(self) -> list[int]:
+    def stat_list(self) -> List[int]:
         return [getattr(self.Stats, attribute) for attribute in self.stat_slots]
 
     def load_player(self) -> None:

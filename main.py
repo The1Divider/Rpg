@@ -109,16 +109,16 @@ def inventory_display() -> None:
     """Displays with setup"""
     inv.inventory_setup()
     a, w, b = inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp
-    armour = Menus.InventoryMenus.inventory_armour_menu(a)
-    weapon = Menus.InventoryMenus.inventory_weapon_menu(w)
+    armours = Menus.InventoryMenus.inventory_armour_menu(a)
+    weapons = Menus.InventoryMenus.inventory_weapon_menu(w)
     bag = Menus.InventoryMenus.inventory_bag_menu(b)
     del a, w, b
-    inv.armour_list_temp, inv.weapon_list_temp = [], []
+    inv.armour_list_temp, inv.weapon_list_temp, inv.bag_list_temp = [], [], []
 
     def armour_menu() -> Menu:
         """Display for armour"""
         input_message = "1) Select Item, 2) Next Page, 3) Exit\n"
-        print(armour)
+        print(armours)
         while (selection := input(input_message)) not in ("1", "2", "3"):
             print(f"Invalid Selection: {selection}")
         if selection == "1":
@@ -158,7 +158,7 @@ def inventory_display() -> None:
     def weapon_menu() -> Menu:
         """Display for weapon slots + quiver"""
         input_message = "1) Select Item, 2) Next Page 3) Previous Page, 4) Exit\n"
-        print(weapon)
+        print(weapons)
 
         while (selection := input(input_message)) not in ("1", "2", "3", "4"):
             print("Invalid Selection")
@@ -203,12 +203,12 @@ def inventory_display() -> None:
             inv.bag_list_temp = []
             return main_menu()
 
-    def bag_menu() -> Menu:
+    def bag_menu() -> Optional[Menu]:
         item = None
-        input_message = "1) Select Item, 2) Previous Page, 3) Exit\n"
+        input_message = "1) Select Item, 2) Equip Weapon, 3) Previous Page, 4) Exit\n"
         print(bag)
 
-        while (selection := input(input_message)) not in ("1", "2", "3"):
+        while (selection := input(input_message)) not in ("1", "2", "3", "4"):
             print("Invalid Selection")
 
         if selection == "1":
@@ -227,9 +227,14 @@ def inventory_display() -> None:
             return bag_menu()
 
         elif selection == "2":
-            return weapon_menu()
+            weapon = input("Which weapon would you like to equip?\n").lower()
+            inv.equip_weapon(weapon)
+            return inventory_display()
 
         elif selection == "3":
+            return weapon_menu()
+
+        elif selection == "4":
             inv.bag_list_temp = []
             return main_menu()
 
