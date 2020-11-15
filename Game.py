@@ -3,6 +3,7 @@ import math
 import time
 from typing import Any
 
+import main
 from InventorySystem import *
 from Sprites import *
 
@@ -82,7 +83,7 @@ class Displacement:
 
         return print_direction(direction, first)
 
-    def average(self) -> tuple[int, int]:
+    def average(self) -> Tuple[int, int]:
         return abs(self.vertical), abs(self.horizontal)
 
 
@@ -164,7 +165,7 @@ class Encounter:
         self.en.defence *= self.en.level
         self.en.block *= self.en.level
 
-    def player_turn(self) -> tuple[int, bool]:
+    def player_turn(self) -> Tuple[int, bool]:
         """returns dmg player dealt + if they blocked the attack"""
         player_blocked = False
         input_message = "1) Attack 2) Defend 3) Inventory 4) Flee\n"
@@ -199,32 +200,40 @@ class Encounter:
             else:
                 print("Invalid input")
 
-    def enemy_turn(self, player_blocked: bool) -> tuple[int, bool]:
+    def enemy_turn(self, player_blocked: bool) -> Tuple[int, bool]:
         """returns dmg enemy dealt (in result of if the player blocked) + if they blocked"""
         enemy_damage = 0
         enemy_blocked = False
+
         if not player_blocked:
+
             if 1 == random.randint(1, 4):
                 enemy_blocked = True
 
             else:
                 enemy_damage = self.en.dmg - self.stats.defence if self.en.dmg - self.stats.defence >= 1 else 1
+
         return enemy_damage, enemy_blocked
 
     def stats_setup(self) -> None:
         """add together base stats + what's provided by weapons/armour"""
         # change for selected weapon slot
         for weapon in [getattr(self.weapons, attribute) for attribute in self.weapon_slots]:
+
             try:
                 self.stats.dmg += weapon.dmg
                 self.stats.crit += weapon.crit
                 self.stats.crit_chance += weapon.crit_chance
+
             except AttributeError:
                 pass
+
         for armour in [getattr(self.armour, attribute) for attribute in self.armour_slots]:
+
             try:
                 self.stats.hp += armour.hp
                 self.stats.defence += armour.defence
+
             except AttributeError:
                 pass
 

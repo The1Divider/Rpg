@@ -37,7 +37,7 @@ class Tagging:
 
     @dataclass
     class Armour:
-        def __init__(self, name: str, item_type: str, hp: int, defence: int, special: str, price: int, hidden: Hidden) -> None:
+        def __init__(self, name: str, item_type: str, hp: int, defence: int, special: str, price: int, hidden) -> None:
             self.name = name
             self.item_type = item_type
             self.hp = hp
