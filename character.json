@@ -40,8 +40,10 @@
     {
       "Name": "Rock",
       "Item_type": "weapon",
+      "Item_weight": 1,
       "Dmg": 1,
       "Crit": 0,
+      "Crit_Chance": 0,
       "Special": "",
       "Price": 0,
       "Hidden": {
