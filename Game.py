@@ -1,7 +1,5 @@
 import math
 import random
-import time
-from collections import namedtuple
 
 from typing import Dict
 
@@ -112,29 +110,25 @@ class Stats:
     player_player_level: int
     player_exp: int
     player_exp_percent: int
+    player_current_hp: int
 
 
 class Encounter(Stats):
-    def __init__(self, _inv: Inventory, enemy: Type[Enemy]) -> None:
+    def __init__(self, _inv: Inventory, enemy: Any) -> None:
         self.inv, self.en = _inv, enemy
         self.enemy_alive, self.player_alive = True, True
+        self.exp_gain = 0
 
-        # works as is, but half the values can be accessed with `self.inv`. Filtering `self.inv.stats_setup` seems like
-        # a waste of time however.
-
-        # hp only matters per game loop (isn't affected after player gets back to the menu/dies) but dmg, etc depends on
-        # the weapons selected -> will have to call `self.inv.stats_setup` again if a selection is requested.
-
-        # adding an arg to `self.inv.stats_setup` to automatically filter it might be an option.
-        self.armour_slots = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
-        self.weapon_slots = ["weapon1", "weapon2", "quiver"]
-
-        super().__init__(*self.inv.stats_setup())
+        self.armour_slots: List = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
+        self.weapon_slots: List = ["weapon1", "weapon2", "quiver"]
+        stats_list, current_hp = self.inv.stats_setup(in_loop=True)
+        super().__init__(*stats_list, current_hp)
         self.enemy_setup(self.en)
 
         self.main_loop()
 
-    def main_loop(self) -> bool:
+    def main_loop(self) -> None:
+        self.exp_gain = self.en.hp * 10
         """Main encounter loop, runs through each encounter until either enemy/player hp hits 0"""
         print(self.en.passive_sprite)
 
@@ -151,23 +145,24 @@ class Encounter(Stats):
             if self.en.hp <= 0:
                 self.enemy_alive = False
 
-            self.player_hp -= enemy_dmg
+            self.player_current_hp -= enemy_dmg
             print(f"{self.en.name} dealt {enemy_dmg} Dmg to you" if enemy_dmg != 0 else f"You blocked the attack")
 
-            if self.inv.Stats.hp <= 0:
+            if self.player_current_hp <= 0:
                 self.player_alive = False
 
             print(self.en.aggro_sprite)
+
         if self.player_alive:
             print("You win")
 
         elif self.enemy_alive:
             print("You lose")
+            self.exp_gain = 0
 
         else:
             print("You killed each other???")
-
-        return self.player_alive
+            self.exp_gain = 0
 
     def enemy_setup(self, en: Any) -> None:
         """Setup enemy stats based on enemy level which in turn is based on player level"""
@@ -243,6 +238,7 @@ def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
 def start_game(_inv: Inventory) -> None:
     """Main game loop: moves + provides encounters to the player based on levels + which biome they're in """
     move = Displacement()
+    _inv.Stats.__post_init__()
     print(LandscapeSprites.main_village)
     choice_message = "Which direction would you like to go?\n"
 
@@ -254,7 +250,6 @@ def start_game(_inv: Inventory) -> None:
 
     if choice == "nowhere":
         print(lazy_choices[random.randint(1, 4) - 1])
-        time.sleep(.5)
         return None
 
     else:
@@ -266,7 +261,14 @@ def start_game(_inv: Inventory) -> None:
         encounter_chance = encounter_xy_sigmoid(distance_away_x, distance_away_y)
 
         if random.randint(1, 100) in range(encounter_chance):
-            alive = Encounter(_inv, enemy=Rat)
+            encounter = Encounter(_inv, enemy=Rat())
+            current_hp, alive, exp_gain = encounter.player_current_hp, encounter.player_alive, encounter.exp_gain
+            setattr(_inv.Stats, "current_hp", current_hp)
+            total_exp = getattr(_inv.Levels, "player_exp")
+            setattr(_inv.Levels, "player_exp", total_exp + exp_gain)
+
+            if not alive:
+                continue
 
         if moved is None:
             print("You've returned to the village")
@@ -274,8 +276,6 @@ def start_game(_inv: Inventory) -> None:
 
         else:
             print(moved)
-
-        time.sleep(.5)
 
         while (choice := input(choice_message).lower()) not in ["north", "south", "east", "west"]:
             print("Invalid direction (north, south, east, west)\n")
