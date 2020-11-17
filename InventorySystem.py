@@ -2,75 +2,81 @@ import json
 import queue
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union, Any
 
-from Items import ItemList, Tagging
-
-ItemType = Tagging.ItemType
-ArmourType = Tagging.ArmourType
+from Objects.Items import ItemList, ItemType, ArmourType
 
 
 @dataclass
 class Armour:
     """Set player armour attributes"""
+
     def __init__(self) -> None:
-        self.helmet = None
-        self.chestplate = None
-        self.leggings = None
-        self.boots = None
-        self.ring1 = None
-        self.ring2 = None
+        self.helmet: Optional[ArmourType] = None
+        self.chestplate: Optional[ArmourType] = None
+        self.leggings: Optional[ArmourType] = None
+        self.boots: Optional[ArmourType] = None
+        self.ring1: Optional[ArmourType] = None
+        self.ring2: Optional[ArmourType] = None
 
 
 @dataclass
 class Weapons:
     """Set player weapon attributes"""
+
     def __init__(self) -> None:
-        self.weapon1 = None
-        self.weapon2 = None
-        self.quiver = 0
+        self.weapon1: Optional[ItemType] = None
+        self.weapon2: Optional[ItemType] = None
+        self.quiver: int = 0
 
 
 @dataclass
 class Stats:
     """Set player stats attributes"""
+
     def __init__(self) -> None:
-        self.crit_chance = None
-        self.hp = 10
-        self.dmg = 1
-        self.defence = 0
-        self.crit = 0
-        self.block = 0
+        self.hp: int = 10
+        self.dmg: int = 1
+        self.defence: int = 0
+        self.crit: int = 0
+        self.crit_chance: int = 0
+        self.block: int = 0
 
 
 @dataclass
 class Levels:
     """Set player level attributes"""
+
     def __init__(self) -> None:
-        self.difficulty = None
-        self.player_level = 1
-        self.player_exp = 0
+        self.difficulty: Optional[int] = None
+        self.player_level: int = 1
+        self.player_exp: int = 0
 
 
 class Inventory:
     def __init__(self, dev_mode: bool = False) -> None:
-        self.exp_bar = None
-        self.required_exp_percent = 0
-        self.required_exp = 0
-        self.dev_mode = dev_mode
-        self.queue_max_size = 10
-        self.Armour = Armour()
-        self.Weapons = Weapons()
-        self.Stats = Stats()
-        self.Levels = Levels()
-        self.bag = queue.Queue(maxsize=self.queue_max_size)
-        self.armour_slots = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
-        self.weapon_slots = ["weapon1", "weapon2", "quiver"]
-        self.stat_slots = ["hp", "dmg", "defence", "crit", "block"]
-        self.armour_list_temp = []
-        self.weapon_list_temp = []
-        self.bag_list_temp = []
-        self.stat_list_temp = []
+        self.dev_mode: bool = dev_mode
+
+        self.exp_bar: Optional[int] = None
+        self.required_exp_percent: int = 0
+        self.required_exp: int = 0
+
+        self.queue_max_size: int = 10
+        self.bag: queue.Queue = queue.Queue(maxsize=self.queue_max_size)
+
+        self.Armour: Armour = Armour()
+        self.Weapons: Weapons = Weapons()
+        self.Stats: Stats = Stats()
+        self.Levels: Levels = Levels()
+
+        self.armour_slots: list = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
+        self.weapon_slots: list = ["weapon1", "weapon2", "quiver"]
+        self.stat_slots: list = ["hp", "dmg", "defence", "crit", "crit_chance", "block"]
+
+        self.armour_list_temp: list = []
+        self.weapon_list_temp: list = []
+        self.bag_list_temp: list = []
+        self.stat_list_temp: list = []
 
     def new_player(self) -> None:
         """give new player preset items"""
@@ -82,6 +88,10 @@ class Inventory:
         to_replace = None
         item = self.get_item(weapon, select=True)
         weight_item, weight_slot_1, weight_slot_2 = None, None, None
+
+        if item == -1:
+            print("Invalid choice")
+            return None
 
         with suppress(AttributeError):
             weight_item = item.item_weight
@@ -95,8 +105,8 @@ class Inventory:
                 setattr(self.Weapons, slot, item)
                 return None
 
-            else:
-                while (slot := input(f"Which slot do you want to replace with {item.name}").lower().replace(" ", ""))\
+            elif weight_item == 1 and (weight_slot_1 is not None and weight_slot_2 is not None):
+                while (slot := input(f"Which slot do you want to replace with {item.name}").lower().replace(" ", "")) \
                         not in ("slot1", "slot2", "cancel"):
                     print("Invalid slot (slot 1, slot 2, cancel")
 
@@ -112,12 +122,11 @@ class Inventory:
                     to_replace = item
 
                 self.bag.put(to_replace)
-                return None
 
-            if weight_item == 2 and (self.Weapons.weapon1 is None and self.Weapons.weapon2 is None):
+            elif weight_item == 2 and (weight_slot_1 is None and weight_slot_2 is None):
                 setattr(self.Weapons, "weapon1", item)
 
-            else:
+            elif weight_item == 2 and (weight_slot_1 is not None and weight_slot_2 is not None):
                 while (ans := input(f"Do you want to replace your current weapons with {item.name}?\n").lower()) not \
                         in ("yes", 'y', "no", 'n'):
                     print("Invalid choice (y/n)")
@@ -132,24 +141,32 @@ class Inventory:
                 elif ans in ("no", 'n'):
                     self.bag.put(item)
 
-                return None
-
-        else:
-            print("Invalid weapon")
             return None
 
-    def get_item(self, item: str, select: bool = False) -> Optional[ItemType]:
+        else:
+            print("Invalid weapon, your bag is empty")
+            return None
+
+    def get_item(self, item: str, select: bool = False) -> Optional[Union[ItemType, int]]:
         """iterate through items in bag to get specified item"""
         bag_item_temp = None
         bag_queue = self.bag
         size = bag_queue.qsize()
-        bag_item = bag_queue.get()
-        print(bag_item.name.lower(), item, size)
+
+        if size != 0:
+            bag_item = bag_queue.get()
+
+        else:
+            return None
 
         while bag_item.name.lower() != item and size > 0:
             bag_queue.put(bag_item)
             bag_item = bag_queue.get()
             size -= 1
+
+        if bag_item.name.lower() != item:
+            bag_queue.put(bag_item)
+            return -1
 
         if bag_item is not None and not select:
             bag_item_temp = bag_item
@@ -208,7 +225,9 @@ class Inventory:
 
         print("Success!")
 
-    def save_player(self):
+        return None
+
+    def save_player(self) -> None:
         """Set armour/weapons/stats/levels/bag to dicts and dump to JSON"""
         arm, wep, stat, lev = self.Armour, self.Weapons, self.Stats, self.Levels
         armour_dict = {"Helmet": arm.helmet, "Chestplate": arm.chestplate, "Leggings": arm.leggings,
@@ -236,7 +255,7 @@ class Inventory:
                     hidden = value.hidden.hidden_template
 
                     if subdict[0] == "weapon":
-                        item = value.weapon_template
+                        item = value.item_template
 
                     else:
                         item = value.armour_template
@@ -251,12 +270,15 @@ class Inventory:
             f.close()
             print("Success!")
 
-    def inventory_setup(self):
+        return None
+
+    def inventory_setup(self) -> None:
         """Create instances of armour and items to send to inventory display w/o mutating the inventory.
            Also copies items in bag to prevent having to return them"""
 
         class NoItem:
             """Placeholder for attribute of a nonexistent item"""
+
             def __init__(self):
                 self.name = None
 
@@ -283,8 +305,13 @@ class Inventory:
         while len(self.bag_list_temp) < self.queue_max_size:
             self.bag_list_temp.append(None)
 
-    def stats_setup(self) -> None:
+        return None
 
+    def stats_setup(self) -> List[Union[int, Any]]:
+        """
+        :return: [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
+                  weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
+        """
         def exp() -> Tuple[float, int]:
             level_with_decimal = (((100 * (2 * self.Levels.player_exp + 25)) ** (1 / 2)) + 50) / 100
             next_level = int(level_with_decimal) + 1
@@ -292,13 +319,12 @@ class Inventory:
 
             required_exp = next_level_exp - self.Levels.player_exp
             required_exp_percent = self.required_exp / next_level_exp * 100
+
             return required_exp, required_exp_percent
 
-        hp, dmg, defence, crit, block = (self.Stats.hp, self.Stats.dmg, self.Stats.defence,
-                                         self.Stats.crit, self.Stats.block)
+        hp, dmg, defence, crit, crit_chance, block = self.stat_list
         armour_hp, armour_defence = 0, 0
-        weapon_dmg, weapon_crit = 0, 0
-        stats = self.stat_list
+        weapon_dmg, weapon_crit, weapon_crit_chance = 0, 0, 0
 
         for armour in self.armour_list:
 
@@ -314,11 +340,14 @@ class Inventory:
             try:
                 weapon_dmg += weapon.dmg
                 weapon_crit += weapon.crit
+                weapon_crit_chance += weapon.crit_chance
 
             except AttributeError:
                 pass
 
         exp, exp_percent = exp()
 
-        self.stat_list_temp = [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, block,
-                               self.Levels.player_level, exp, exp_percent]
+        self.stat_list_temp = [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
+                               weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
+
+        return self.stat_list_temp
