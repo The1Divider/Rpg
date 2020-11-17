@@ -1,4 +1,4 @@
-from typing import NewType, Callable, List, Type
+from typing import NewType, Callable, List, Type, Optional
 
 from Objects.Items import ItemType, ArmourType
 
@@ -46,11 +46,11 @@ class MenuSprites:
             return "".join(menu_list)
 
         @staticmethod
-        def stats_menu(stats_list: List[int]) -> SpacingType:
+        def stats_menu(stats_list: List[int], current_hp: Optional[int]) -> SpacingType:
             """ pass stats along with player_level + player_exp """
             hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance, \
                 weapon_crit_chance, block, level, exp, exp_percent = stats_list
-            exp_bars = "".join(["*" for _ in range(int(exp_percent) // 10)])
+            exp_bars = "".join(["*" for _ in range(int(exp_percent) // 10) if exp != 0])
 
             while len(exp_bars) < 10:
                 exp_bars += "-"
@@ -62,17 +62,21 @@ class MenuSprites:
             menu_line5 = f"| Exp         | [{exp_bars}] |\n"
             menu_line6 = "|-------------------------------|\n"
             menu_line7 = f"| Hp          | {hp} + {armour_hp} |\n"
-            menu_line8 = f"| Dmg         | {dmg} + {weapon_dmg} |\n"
-            menu_line9 = f"| Defence     | {defence} + {armour_defence} |\n"
-            menu_line10 = f"| Crit        | {crit} + {weapon_crit} |\n"
-            menu_line11 = f"| Crit Chance | {crit_chance} + {weapon_crit_chance} |\n"
-            menu_line12 = f"| Block       | {block} |\n"
-            menu_line13 = " ------------------------------- \n"
-            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
-                         menu_line7, menu_line8, menu_line9, menu_line10, menu_line11, menu_line12, menu_line13]
+            menu_line8 = f"| Current Hp  | {current_hp}"
+            menu_line9 = f"| Dmg         | {dmg} + {weapon_dmg} |\n"
+            menu_line10 = f"| Defence     | {defence} + {armour_defence} |\n"
+            menu_line11 = f"| Crit        | {crit} + {weapon_crit} |\n"
+            menu_line12 = f"| Crit Chance | {crit_chance} + {weapon_crit_chance} |\n"
+            menu_line13 = f"| Block       | {block} |\n"
+            menu_line14 = " ------------------------------- \n"
+            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6, menu_line7,
+                         menu_line8, menu_line9, menu_line10, menu_line11, menu_line12, menu_line13, menu_line14]
+
+            if current_hp is None:
+                menu_list.remove(menu_line8)
 
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list,
-                                                                     [menu_line1, menu_line3, menu_line6, menu_line13])
+                                                                     [menu_line1, menu_line3, menu_line6, menu_line14])
 
         @staticmethod
         def inventory_armour_menu(armour_list: List[ArmourType]) -> SpacingType:
