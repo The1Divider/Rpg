@@ -1,9 +1,6 @@
-from typing import NewType, Callable, List, Type, Optional
+from typing import NewType, Callable, List, Type, Optional, Tuple
 
-from Objects.Items import ItemType, ArmourType
-
-SpacingType = NewType("SpacingType", Callable[[List[str], List[str]], str])
-
+from .Items import ItemType, ArmourType
 
 class MenuSprites:
     start_menu = "------------------\n" \
@@ -46,7 +43,7 @@ class MenuSprites:
             return "".join(menu_list)
 
         @staticmethod
-        def stats_menu(stats_list: List[int], current_hp: Optional[int]) -> SpacingType:
+        def stats_menu(stats_list: List[int], current_hp: Optional[int]) -> str:
             """ pass stats along with player_level + player_exp """
             hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance, \
                 weapon_crit_chance, block, level, exp, exp_percent = stats_list
@@ -79,7 +76,7 @@ class MenuSprites:
                                                                      [menu_line1, menu_line3, menu_line6, menu_line14])
 
         @staticmethod
-        def inventory_armour_menu(armour_list: List[ArmourType]) -> SpacingType:
+        def inventory_armour_menu(armour_list: List[ArmourType]) -> str:
             helmet, chest, leg, boots, ring1, ring2 = armour_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Armour |\n"
@@ -97,7 +94,7 @@ class MenuSprites:
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line10])
 
         @staticmethod
-        def inventory_weapon_menu(weapon_list: List[ItemType]) -> SpacingType:
+        def inventory_weapon_menu(weapon_list: List[ItemType]) -> str:
             weapon1, weapon2, quiver = weapon_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
@@ -112,7 +109,7 @@ class MenuSprites:
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line7])
 
         @staticmethod
-        def inventory_bag_menu(item_list: List[ItemType]) -> SpacingType:
+        def inventory_bag_menu(item_list: List[ItemType]) -> str:
             item1, item2, item3, item4, item5, item6, item7, item8, item9, item10 = item_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
@@ -130,7 +127,7 @@ class MenuSprites:
                 MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9]))
 
         @staticmethod
-        def weapon_selection(weapon: ItemType) -> SpacingType:
+        def weapon_selection(weapon: ItemType) -> str:
             weapon_values_names = ["name", "item_weight", "dmg", "crit", "crit_chance", "special", "price"]
             weapon_values = [getattr(weapon, attr) for attr in weapon_values_names]
             name, weight, dmg, crit, crit_chance, special, price = weapon_values
@@ -139,8 +136,8 @@ class MenuSprites:
                 special = None
 
             menu_line1 = " ------------------------------- \n"
-            menu_line2 = f"| {name} |\n"
-            menu_line3 = f"|-------------------------------|\n"
+            menu_line2 = "| {name} |\n"
+            menu_line3 = "|-------------------------------|\n"
             menu_line4 = f"| Weight      - {weight} Handed |\n"
             menu_line5 = f"| Dmg         - {dmg} |\n"
             menu_line6 = f"| Crit        - {crit} |\n"
@@ -152,11 +149,11 @@ class MenuSprites:
             menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5, menu_line6,
                          menu_line7, menu_line8, menu_line9, menu_line10, menu_line11]
 
-            return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3,
-                                                                                 menu_line9, menu_line11])
+            return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list,
+                                                                     [menu_line1, menu_line3, menu_line9, menu_line11])
 
         @staticmethod
-        def armour_selection(weapon: ArmourType) -> SpacingType:
+        def armour_selection(weapon: ArmourType) -> str:
             armour_values_names = ["name", "hp", "defence", "special", "price"]
             armour_values = [getattr(weapon, attr) for attr in armour_values_names]
             name, hp, defence, special, price = armour_values
@@ -272,7 +269,6 @@ class EnemySprites:
                      "     '~' '~----'      \n"
 
 
-MenuType = NewType("MenuType", Type[MenuSprites])
-InventoryDisplayType = NewType("InventoryDisplayType", Type[MenuSprites.InventoryMenus])
-LandscapeSpriteType = NewType("LandscapeSpriteType", Type[LandscapeSprites])
-EnemySpriteType = NewType("EnemySpriteType", Type[EnemySprites])
+MenuType = Type[MenuSprites]
+InventoryDisplayType = Type[MenuSprites.InventoryMenus]
+LandscapeSpriteType = Type[LandscapeSprites]

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import NewType, Optional, List, Dict
+from typing import NewType, Optional, List, Dict, Type
 
 
 @dataclass
@@ -35,13 +35,13 @@ class Item:
 
 @dataclass
 class Armour:
-    name: str = None
-    item_type: str = None
-    hp: int = None
-    defence: int = None
-    special: str = None
-    price: int = None
-    hidden: Hidden = None
+    name: str
+    item_type: str
+    hp: int
+    defence: int
+    special: str
+    price: int
+    hidden: Hidden
 
     armour_template: Dict = field(init=False)
 
@@ -51,8 +51,8 @@ class Armour:
 
 
 HiddenType = NewType("HiddenType", Hidden)
-ItemType = NewType("Item", Item)
-ArmourType = NewType("Armour", Armour)
+ItemType = NewType("ItemType", Item)
+ArmourType = NewType("ArmourType", Armour)
 
 
 class ItemList:
