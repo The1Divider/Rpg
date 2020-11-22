@@ -4,8 +4,8 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Union, Any, Literal, overload
 
-from Objects.Items import ItemList, ItemType, ArmourType, Item
-from Objects.Sprites import MenuSprites, MenuType
+from .Objects.Items import ItemList, ItemType, ArmourType, Item
+from .Objects.Sprites import MenuSprites, MenuType
 
 
 @dataclass
@@ -216,13 +216,13 @@ class InventoryDisplay(PlayerInv):
 
         return None
 
-    def stats_setup(self, in_loop: bool) -> Tuple[List[Union[int, Any]], Optional[int]]:
+    def stats_setup(self, in_loop: bool) -> List:
         """
         :return: [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
                   weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
         """
 
-        def exp() -> Tuple[float, int, int]:
+        def exp() -> Tuple[float, float, int]:
             level_with_decimal = (((100 * (2 * self.Levels.player_exp + 25)) ** (1 / 2)) + 50) / 100
             level_int = int(level_with_decimal)
             next_level = level_int + 1
@@ -263,11 +263,12 @@ class InventoryDisplay(PlayerInv):
 
         if in_loop:
             current_hp = self.Stats.current_hp
+            self.stat_list_temp.append(current_hp)
+            return self.stat_list_temp
 
         else:
-            current_hp = None
+            return self.stat_list_temp
 
-        return self.stat_list_temp, current_hp
 
     def inventory_display(self) -> None:  # class
         """Displays with setup"""
@@ -508,10 +509,10 @@ class InventoryManagement(PlayerInv):
         raise NoSelection
 
     def equip_weapon(self, weapon: Optional[str], index: Optional[int]):
-        if weapon is None:
+        if weapon is None and index is not None:
             item = self.get_item(item=None, index=index, copy=True)
 
-        elif index is None:
+        elif index is None and weapon is not None:
             item = self.get_item(item=weapon, index=None, copy=True)
 
         else:
@@ -575,10 +576,6 @@ class InventoryManagement(PlayerInv):
     def get_item(self, item: Literal[None], index: int, copy: bool) -> ItemType:
         ...
 
-    @overload
-    def get_item(self, item: Literal[None], index: Literal[None], copy: bool) -> None:
-        raise NoSelection
-
     def get_item(self, item: Optional[str], index: Optional[int], copy: bool) -> Optional[ItemType]:
         """
         iterate through items in bag to get specified item
@@ -587,6 +584,9 @@ class InventoryManagement(PlayerInv):
         :param Optional[int] index: index of item in bag (1-based index)
         :param bool copy: whether or not to copy item for display
         """
+        if item is None and index is None:
+            raise NoSelection
+
         bag_size = self.bag.qsize()
 
         if bag_size == 0:
@@ -626,10 +626,6 @@ class InventoryManagement(PlayerInv):
     def unequip_item(self, item: Literal[None], slot: str) -> None:
         ...
 
-    @overload
-    def unequip_item(self, item: Literal[None], slot: Literal[None]) -> None:
-        raise NoSelection
-
     def unequip_item(self, item: Optional[str], slot: Optional[str]) -> None:
         """
         Unequip item in weapon slot
@@ -637,6 +633,8 @@ class InventoryManagement(PlayerInv):
         :param Optional[str] item: item name
         :param Optional[str] slot: slot item is in [weapon1, weapon2]
         """
+        if item is None and slot is None:
+            raise NoSelection
 
         if self.bag.full():
             raise FullBag
@@ -667,16 +665,16 @@ class InventoryManagement(PlayerInv):
     def drop_weapon(self, weapon: Literal[None], index: int) -> None:
         ...
 
-    @overload
-    def drop_weapon(self, weapon: Literal[None], index: Literal[None]) -> None:
-        raise NoSelection
-
     def drop_weapon(self, weapon: Optional[str], index: Optional[int]) -> None:
         # no need to error handle this because drop_weapon will be handled
-        if weapon is not None:
+
+        if weapon is not None and index is not None:
+            raise NoSelection
+
+        elif weapon is not None:
             selected_item = self.get_item(item=weapon, index=None, copy=False)
 
-        if index is not None:
+        elif index is not None:
             selected_item = self.get_item(item=None, index=index, copy=False)
 
         item_name = selected_item.name

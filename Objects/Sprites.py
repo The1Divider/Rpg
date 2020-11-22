@@ -1,6 +1,6 @@
 from typing import NewType, Callable, List, Type, Optional, Tuple
 
-from .Items import ItemType, ArmourType
+from Objects.Items import ItemType, ArmourType
 
 class MenuSprites:
     start_menu = "------------------\n" \

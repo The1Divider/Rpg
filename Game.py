@@ -4,8 +4,8 @@ import random
 from typing import Dict
 
 from InventorySystem import *
-from Objects.Sprites import *
-from Objects.Enemies import *
+from .Objects.Sprites import *
+from .Objects.Enemies import *
 
 SCALE = 10
 
@@ -122,7 +122,7 @@ class Encounter(Stats):
         self.armour_slots: List = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
         self.weapon_slots: List = ["weapon1", "weapon2", "quiver"]
         stats_list, current_hp = self.inv.stats_setup(in_loop=True)
-        super().__init__(*stats_list, current_hp)
+        super().__init__(*stats_list)
         self.enemy_setup(self.en)
 
         self.main_loop()
@@ -249,7 +249,7 @@ def start_game(_inv: Inventory) -> None:
                     "Someone hits you in the head with a rock", "Your neighbor reports you for soliciting"]
 
     if choice == "nowhere":
-        print(lazy_choices[random.randint(1, 4) - 1])
+        print(lazy_choices[random.randint(0, 3)])
         return None
 
     else:
