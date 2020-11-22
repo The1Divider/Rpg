@@ -1,15 +1,15 @@
-from typing import Optional
+from typing import Optional, Union
 from contextlib import suppress
 
-from Game import start_game
+from .Game import start_game
 from .Objects.Sprites import MenuSprites, MenuType, InventoryDisplayType
-from InventorySystem import PlayerInv
+from .InventorySystem import PlayerInv
 
 inv = PlayerInv()
 exit_list = ["quit", "exit", "stop", "end"]
 
 
-def start_menu() -> Optional[MenuType]:
+def start_menu() -> None:
     """Start menu of the game
        Contains access to:
         - Opening a game:
@@ -39,7 +39,7 @@ def start_menu() -> Optional[MenuType]:
         quit()
 
 
-def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
+def main_menu() -> None:
     """Main menu of the game
        Contains access to:
         - Main loop
@@ -63,14 +63,14 @@ def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
         return main_menu()
 
     elif selection in [2, "inventory"]:
-        inv.inventory_display()
+        inv.InventoryDisplay.inventory_display()
         return main_menu()
 
     elif selection in [3, "shop"]:
         pass
 
     elif selection in [4, "stats"]:
-        inv.stats_display(in_loop=False)
+        inv.InventoryDisplay.stats_display(in_loop=False)
         return main_menu()
 
     elif selection in [5, "save", "load"]:

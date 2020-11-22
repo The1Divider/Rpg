@@ -52,7 +52,7 @@ class Armour:
 
 HiddenType = NewType("HiddenType", Hidden)
 ItemType = NewType("ItemType", Item)
-ArmourType = NewType("ArmourType", Armour)
+ArmourType = Armour
 
 
 class ItemList:

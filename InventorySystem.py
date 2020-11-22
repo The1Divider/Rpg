@@ -2,47 +2,47 @@ import json
 import queue
 from contextlib import suppress
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, Union, Any, Literal, overload
+from typing import List, Optional, Tuple, Union, Any, Literal, overload, NewType
 
 from .Objects.Items import ItemList, ItemType, ArmourType, Item
 from .Objects.Sprites import MenuSprites, MenuType
 
 
-@dataclass
+@dataclass(init=False)
 class Armour:
     """Set player armour attributes"""
-    helmet: Optional[ArmourType] = None
-    chestplate: Optional[ArmourType] = None
-    leggings: Optional[ArmourType] = None
-    boots: Optional[ArmourType] = None
-    ring1: Optional[ArmourType] = None
-    ring2: Optional[ArmourType] = None
+    helmet: Optional[ArmourType]
+    chestplate: Optional[ArmourType]
+    leggings: Optional[ArmourType]
+    boots: Optional[ArmourType]
+    ring1: Optional[ArmourType]
+    ring2: Optional[ArmourType]
 
 
-@dataclass
+@dataclass(init=False)
 class Weapons:
     """Set player weapon attributes"""
-    weapon1: Optional[ItemType] = None
-    weapon2: Optional[ItemType] = None
-    quiver: int = 0
+    weapon1: Optional[ItemType]
+    weapon2: Optional[ItemType]
+    quiver: int
 
 
-@dataclass
+@dataclass(init=False)
 class Stats:
     """Set player stats attributes"""
     current_hp: int = field(init=False)
-    hp: int = 10
-    dmg: int = 1
-    defence: int = 0
-    crit: int = 0
-    crit_chance: int = 0
-    block: int = 0
+    hp: int
+    dmg: int
+    defence: int
+    crit: int
+    crit_chance: int
+    block: int
 
     def __post_init__(self):
         self.current_hp = self.hp
 
 
-@dataclass
+@dataclass(init=False)
 class Levels:
     """Set player level attributes"""
     difficulty: Optional[int] = None
@@ -69,7 +69,7 @@ class PlayerInv:
         self.armour_slots: list = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
         self.weapon_slots: list = ["weapon1", "weapon2", "quiver"]
         self.stat_slots: list = ["hp", "dmg", "defence", "crit", "crit_chance", "block"]
-
+        self.level_slots: list = ["difficulty", "player_level", "player_exp"]
         self.armour_list_temp: list = []
         self.weapon_list_temp: list = []
         self.bag_list_temp: list = []
@@ -89,6 +89,10 @@ class PlayerInv:
 
     def new_player(self) -> None:
         """give new player preset items"""
+        [setattr(self.Armour, attribute, None) for attribute in self.armour_slots]
+        [setattr(self.Weapons, attribute, None) if attribute != "quiver" else 0 for attribute in self.weapon_slots]
+        [setattr(self.Stats, attribute, value) for attribute, value in zip(self.stat_slots, [10, 1, 0, 0, 0, 0])]
+        [setattr(self.Levels, attribute, value) for attribute, value in zip(self.level_slots, [None, 1, 0])]
         self.Armour.ring1 = ItemList.wedding_ring
         self.bag.put(ItemList.rock)
         self.Armour.helmet = ItemList.straw_sunhat
@@ -180,7 +184,10 @@ class PlayerInv:
         return None
 
 
-class InventoryDisplay(PlayerInv):
+@dataclass
+class InventoryDisplay:
+    state: PlayerInv
+
     def inventory_setup(self) -> None:
         """Create instances of armour and items to send to inventory display w/o mutating the inventory.
            Also copies items in bag to prevent having to return them"""
@@ -193,12 +200,12 @@ class InventoryDisplay(PlayerInv):
 
         x = NoItem()
 
-        for item in self.armour_list:
+        for item in self.state.armour_list:
             if item is None:
                 item = x
             self.armour_list_temp.append(item)
 
-        for item in self.weapon_list:
+        for item in self.state.weapon_list:
             if item is None:
                 item = x
             self.weapon_list_temp.append(item)
@@ -211,7 +218,7 @@ class InventoryDisplay(PlayerInv):
             bag_queue.put(temp)
             self.bag_list_temp.append(item.name)
 
-        while len(self.bag_list_temp) < self.queue_max_size:
+        while len(self.bag_list_temp) < self.state.queue_max_size:
             self.bag_list_temp.append(None)
 
         return None
@@ -223,21 +230,21 @@ class InventoryDisplay(PlayerInv):
         """
 
         def exp() -> Tuple[float, float, int]:
-            level_with_decimal = (((100 * (2 * self.Levels.player_exp + 25)) ** (1 / 2)) + 50) / 100
+            level_with_decimal = (((100 * (2 * self.state.Levels.player_exp + 25)) ** (1 / 2)) + 50) / 100
             level_int = int(level_with_decimal)
             next_level = level_int + 1
             next_level_exp = (next_level ** 2 + next_level) / 2 * 100 - (next_level * 100)
 
-            required_exp = next_level_exp - self.Levels.player_exp
+            required_exp = next_level_exp - self.state.Levels.player_exp
             required_exp_percent = required_exp / next_level_exp * 100
 
             return required_exp, required_exp_percent, level_int
 
-        hp, dmg, defence, crit, crit_chance, block = self.stat_list
+        hp, dmg, defence, crit, crit_chance, block = self.state.stat_list
         armour_hp, armour_defence = 0, 0
         weapon_dmg, weapon_crit, weapon_crit_chance = 0, 0, 0
 
-        for armour in self.armour_list:
+        for armour in self.state.armour_list:
 
             try:
                 armour_hp += armour.hp
@@ -246,7 +253,7 @@ class InventoryDisplay(PlayerInv):
             except AttributeError:
                 pass
 
-        for weapon in self.weapon_list:
+        for weapon in self.state.weapon_list:
 
             try:
                 weapon_dmg += weapon.dmg
@@ -256,13 +263,13 @@ class InventoryDisplay(PlayerInv):
             except AttributeError:
                 pass
 
-        exp, exp_percent, level = exp()
-        setattr(self.Levels, "player_level", level)
+        current_exp, exp_percent, level = exp()
+        setattr(self.state.Levels, "player_level", level)
         self.stat_list_temp = [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
-                               weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
+                               weapon_crit_chance, block, self.state.Levels.player_level, exp, exp_percent]
 
         if in_loop:
-            current_hp = self.Stats.current_hp
+            current_hp = self.state.Stats.current_hp
             self.stat_list_temp.append(current_hp)
             return self.stat_list_temp
 
@@ -293,11 +300,11 @@ class InventoryDisplay(PlayerInv):
                     armour_selection = armour_selection.replace(" ", "")
 
                 if armour_selection in armour_selection_list:
-                    print(MenuSprites.InventoryMenus.armour_selection(getattr(self.Armour, armour_selection)))
+                    print(MenuSprites.InventoryMenus.armour_selection(getattr(self.state.Armour, armour_selection)))
 
                 else:
                     armour_selection = armour_selection.title()
-                    armour_list = [getattr(self.Armour, attribute) for attribute in armour_selection_list]
+                    armour_list = [getattr(self.state.Armour, attribute) for attribute in armour_selection_list]
 
                     for item in armour_list:
                         try:
@@ -334,12 +341,12 @@ class InventoryDisplay(PlayerInv):
                     weapon_selection = weapon_selection.replace(" ", "")
 
                 if weapon_selection in ("weapon1", "weapon2"):
-                    print(MenuSprites.InventoryMenus.weapon_selection(getattr(self.Weapons, weapon_selection)))
+                    print(MenuSprites.InventoryMenus.weapon_selection(getattr(self.state.Weapons, weapon_selection)))
                     return weapon_menu()
 
                 else:
                     weapon_selection = weapon_selection.title()
-                    weapon_list = [getattr(self.Weapons, attribute) for attribute in ("weapon1", "weapon2")]
+                    weapon_list = [getattr(self.state.Weapons, attribute) for attribute in ("weapon1", "weapon2")]
 
                     for item in weapon_list:
                         try:
@@ -390,7 +397,7 @@ class InventoryDisplay(PlayerInv):
             elif selection == "5":
                 return None
 
-        def bag_menu() -> MenuType:
+        def bag_menu() -> None:
             input_message = "1) Select Item, 2) Equip Weapon, 3) Drop Weapon 4) Previous Page, 5) Exit\n"
             print(bag)
 
@@ -408,7 +415,7 @@ class InventoryDisplay(PlayerInv):
                     else:
                         item = self.get_item(item=weapon_selection, copy=True)
 
-                    print(MenuSprites.InventoryMenus.weapon_selection(weapon_selection))
+                    print(MenuSprites.InventoryMenus.weapon_selection(item))
                     return bag_menu()
 
                 except EmptyBag:
@@ -495,7 +502,9 @@ class FullBag(Exception):
     pass
 
 
-class InventoryManagement(PlayerInv):
+@dataclass
+class InventoryManagement:
+    state: PlayerInv
     @overload
     def equip_weapon(self, weapon: str, index: Literal[None]) -> None:
         ...
@@ -522,12 +531,12 @@ class InventoryManagement(PlayerInv):
 
         with suppress(AttributeError):
             weight_item = item.item_weight
-            weight_slot_1 = self.Weapons.weapon1.item_weight
-            weight_slot_2 = self.Weapons.weapon2.item_weight
+            weight_slot_1 = self.state.Weapons.weapon1.item_weight
+            weight_slot_2 = self.state.Weapons.weapon2.item_weight
 
             if weight_item == 1 and (weight_slot_1 is None or weight_slot_2 is None):
-                slot = "weapon1" if self.Weapons.weapon1 is None else "weapon2"
-                setattr(self.Weapons, slot, item)
+                slot = "weapon1" if self.state.Weapons.weapon1 is None else "weapon2"
+                setattr(self.state.Weapons, slot, item)
                 return None
 
             elif weight_item == 1 and (weight_slot_1 is not None and weight_slot_2 is not None):
@@ -536,20 +545,19 @@ class InventoryManagement(PlayerInv):
                     print("Invalid slot (slot 1, slot 2, cancel")
 
                 if slot == "slot1":
-                    to_replace = getattr(self.Weapons, "weapon1")
-                    setattr(self.Weapons, "weapon1", item)
+                    to_replace = getattr(self.state.Weapons, "weapon1")
+                    setattr(self.state.Weapons, "weapon1", item)
 
                 elif slot == "slot2":
-                    to_replace = getattr(self.Weapons, "weapon2")
-                    setattr(self.Weapons, "weapon2", item)
+                    to_replace = getattr(self.state.Weapons, "weapon2")
+                    setattr(self.state.Weapons, "weapon2", item)
 
                 elif slot == "cancel":
                     to_replace = item
-
-                self.bag.put(to_replace)
+                    self.state.bag.put(to_replace)
 
             elif weight_item == 2 and (weight_slot_1 is None and weight_slot_2 is None):
-                setattr(self.Weapons, "weapon1", item)
+                setattr(self.state.Weapons, "weapon1", item)
 
             elif weight_item == 2 and (weight_slot_1 is not None and weight_slot_2 is not None):
                 while (ans := input(f"Do you want to replace your current weapons with {item.name}?\n").lower()) not \
@@ -557,14 +565,14 @@ class InventoryManagement(PlayerInv):
                     print("Invalid choice (y/n)")
 
                 if ans in ("yes", 'y'):
-                    weapon_1, weapon_2 = [getattr(self.Weapons, attribute) for attribute in ("weapon1", "weapon2")]
+                    weapon_1, weapon_2 = [getattr(self.state.Weapons, attribute) for attribute in ("weapon1", "weapon2")]
                     print(weapon_1, weapon_2)
-                    self.bag.put(weapon_1)
-                    self.bag.put(weapon_2)
-                    setattr(self.Weapons, "weapon1", item)
+                    self.state.bag.put(weapon_1)
+                    self.state.bag.put(weapon_2)
+                    setattr(self.state.Weapons, "weapon1", item)
 
                 elif ans in ("no", 'n'):
-                    self.bag.put(item)
+                    self.state.bag.put(item)
 
             return None
 
@@ -587,7 +595,8 @@ class InventoryManagement(PlayerInv):
         if item is None and index is None:
             raise NoSelection
 
-        bag_size = self.bag.qsize()
+        bag_size = self.state.bag.qsize()
+        bag_item = None
 
         if bag_size == 0:
             raise EmptyBag
@@ -596,25 +605,26 @@ class InventoryManagement(PlayerInv):
             if index > bag_size and index:
                 raise InvalidIndex
 
-            bag_item = self.bag.get()
+            bag_item = self.state.bag.get()
             while index >= 1:
-                self.bag.put(bag_item)
-                bag_item = self.bag.get()
+                self.state.bag.put(bag_item)
+                bag_item = self.state.bag.get()
                 index -= 1
 
         if item is not None:
+            bag_item = self.state.bag.get()
             while bag_item.name.lower() != item and bag_size > 0:
-                self.bag.put(bag_item)
-                bag_item = self.bag.get()
+                self.state.bag.put(bag_item)
+                bag_item = self.state.bag.get()
                 bag_size -= 1
 
             if bag_size == 0 and bag_item.name.lower() != item:
-                self.bag.put(bag_item)
+                self.state.bag.put(bag_item)
                 raise NotInBag
 
-        if copy:
+        if copy and bag_item is not None:
             bag_item_temp = bag_item
-            self.bag.put(bag_item_temp)
+            self.state.bag.put(bag_item_temp)
 
         return bag_item
 
@@ -636,23 +646,23 @@ class InventoryManagement(PlayerInv):
         if item is None and slot is None:
             raise NoSelection
 
-        if self.bag.full():
+        if self.state.bag.full():
             raise FullBag
 
         if item is not None:
-            for weapon_slot in self.weapon_slots:
-                selected_item = getattr(self.Weapons, weapon_slot)
+            for weapon_slot in self.state.weapon_slots:
+                selected_item = getattr(self.state.Weapons, weapon_slot)
                 if selected_item.name.lower().replace(" ", "").replace("-", "") == item:
-                    setattr(self.Weapons, weapon_slot, None)
-                    self.bag.put(selected_item)
+                    setattr(self.state.Weapons, weapon_slot, None)
+                    self.state.bag.put(selected_item)
                     return None
             else:
                 raise NotInBag
 
         if slot is not None and slot in ["weapon1", "weapon2"]:
-            selected_item = getattr(self.Weapons, slot)
-            setattr(self.Weapons, slot, None)
-            self.bag.put(selected_item)
+            selected_item = getattr(self.state.Weapons, slot)
+            setattr(self.state.Weapons, slot, None)
+            self.state.bag.put(selected_item)
             return None
         else:
             raise InvalidIndex
@@ -667,6 +677,8 @@ class InventoryManagement(PlayerInv):
 
     def drop_weapon(self, weapon: Optional[str], index: Optional[int]) -> None:
         # no need to error handle this because drop_weapon will be handled
+
+        selected_item = None
 
         if weapon is not None and index is not None:
             raise NoSelection
@@ -685,7 +697,7 @@ class InventoryManagement(PlayerInv):
             print("Invalid selection (y/n)")
 
         if selection in ["n", "no"]:
-            self.bag.put(selected_item)
+            self.state.bag.put(selected_item)
             print(f"{item_name} has been returned to your bag")
 
         elif selection in ["y", "yes"]:

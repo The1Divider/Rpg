@@ -1,10 +1,10 @@
 import math
 import random
 
-from typing import Dict
+from typing import Dict, Any, Optional, Tuple, List
 
 from InventorySystem import *
-from .Objects.Sprites import *
+from .Objects.Sprites import LandscapeSprites
 from .Objects.Enemies import *
 
 SCALE = 10
@@ -163,6 +163,8 @@ class Encounter(Stats):
         else:
             print("You killed each other???")
             self.exp_gain = 0
+
+        return None
 
     def enemy_setup(self, en: Any) -> None:
         """Setup enemy stats based on enemy level which in turn is based on player level"""
