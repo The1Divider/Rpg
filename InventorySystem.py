@@ -10,7 +10,8 @@ from .Objects.Sprites import MenuSprites, MenuType
 
 @dataclass(init=False)
 class Armour:
-    """Set player armour attributes"""
+    """Set player armour attributes
+    :param helmet:"""
     helmet: Optional[ArmourType]
     chestplate: Optional[ArmourType]
     leggings: Optional[ArmourType]
@@ -210,7 +211,7 @@ class InventoryDisplay:
                 item = x
             self.weapon_list_temp.append(item)
 
-        bag_queue = self.bag
+        bag_queue = self.state.bag
 
         for _ in range(bag_queue.qsize()):
             temp = bag_queue.get()
@@ -280,7 +281,7 @@ class InventoryDisplay:
     def inventory_display(self) -> None:  # class
         """Displays with setup"""
         self.inventory_setup()
-        a, w, b = self.armour_list_temp, self.weapon_list_temp, self.bag_list_temp
+        a, w, b = self.state.armour_list_temp, self.state.weapon_list_temp, self.state.bag_list_temp
         armours = MenuSprites.InventoryMenus.inventory_armour_menu(a)
         weapons = MenuSprites.InventoryMenus.inventory_weapon_menu(w)
         bag = MenuSprites.InventoryMenus.inventory_bag_menu(b)

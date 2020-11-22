@@ -1,6 +1,7 @@
 import math
 import random
 
+from dataclasses import dataclass
 from typing import Dict, Any, Optional, Tuple, List
 
 from InventorySystem import *
@@ -114,14 +115,12 @@ class Stats:
 
 
 class Encounter(Stats):
-    def __init__(self, _inv: Inventory, enemy: Any) -> None:
+    def __init__(self, _inv: PlayerInv, enemy: Any) -> None:
         self.inv, self.en = _inv, enemy
         self.enemy_alive, self.player_alive = True, True
         self.exp_gain = 0
 
-        self.armour_slots: List = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
-        self.weapon_slots: List = ["weapon1", "weapon2", "quiver"]
-        stats_list, current_hp = self.inv.stats_setup(in_loop=True)
+        stats_list = self.inv.state.stats_setup(in_loop=True)
         super().__init__(*stats_list)
         self.enemy_setup(self.en)
 
@@ -237,7 +236,7 @@ def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
     return total_chance // 2
 
 
-def start_game(_inv: Inventory) -> None:
+def start_game(_inv: PlayerInv) -> None:
     """Main game loop: moves + provides encounters to the player based on levels + which biome they're in """
     move = Displacement()
     _inv.Stats.__post_init__()

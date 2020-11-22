@@ -1,6 +1,6 @@
 from typing import NewType, Callable, List, Type, Optional, Tuple
 
-from Objects.Items import ItemType, ArmourType
+from .Items import ItemType, ArmourType
 
 class MenuSprites:
     start_menu = "------------------\n" \
@@ -136,7 +136,7 @@ class MenuSprites:
                 special = None
 
             menu_line1 = " ------------------------------- \n"
-            menu_line2 = "| {name} |\n"
+            menu_line2 = f"| {name} |\n"
             menu_line3 = "|-------------------------------|\n"
             menu_line4 = f"| Weight      - {weight} Handed |\n"
             menu_line5 = f"| Dmg         - {dmg} |\n"
