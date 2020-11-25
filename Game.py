@@ -2,11 +2,11 @@ import math
 import random
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, Tuple
 
 from InventorySystem import *
-from .Objects.Sprites import LandscapeSprites
-from .Objects.Enemies import *
+from Objects.Sprites import LandscapeSprites
+from Objects.Enemies import *
 
 SCALE = 10
 
@@ -115,12 +115,12 @@ class Stats:
 
 
 class Encounter(Stats):
-    def __init__(self, _inv: PlayerInv, enemy: Any) -> None:
+    def __init__(self, _inv: Inventory, enemy: Any) -> None:
         self.inv, self.en = _inv, enemy
         self.enemy_alive, self.player_alive = True, True
         self.exp_gain = 0
 
-        stats_list = self.inv.state.stats_setup(in_loop=True)
+        stats_list = self.inv.display.stats_setup(in_loop=True)
         super().__init__(*stats_list)
         self.enemy_setup(self.en)
 
@@ -167,7 +167,7 @@ class Encounter(Stats):
 
     def enemy_setup(self, en: Any) -> None:
         """Setup enemy stats based on enemy level which in turn is based on player level"""
-        player_level = self.inv.Levels.player_level
+        player_level = self.inv.state.Levels.player_level
         en.level = player_level if player_level <= self.en.level_cap else self.en.level_cap
         en.hp *= self.en.level
         en.dmg *= self.en.level
@@ -236,10 +236,10 @@ def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
     return total_chance // 2
 
 
-def start_game(_inv: PlayerInv) -> None:
+def start_game(_inv: Inventory) -> None:
     """Main game loop: moves + provides encounters to the player based on levels + which biome they're in """
     move = Displacement()
-    _inv.Stats.__post_init__()
+    _inv.state.Stats.__post_init__()
     print(LandscapeSprites.main_village)
     choice_message = "Which direction would you like to go?\n"
 
@@ -264,9 +264,9 @@ def start_game(_inv: PlayerInv) -> None:
         if random.randint(1, 100) in range(encounter_chance):
             encounter = Encounter(_inv, enemy=Rat())
             current_hp, alive, exp_gain = encounter.player_current_hp, encounter.player_alive, encounter.exp_gain
-            setattr(_inv.Stats, "current_hp", current_hp)
-            total_exp = getattr(_inv.Levels, "player_exp")
-            setattr(_inv.Levels, "player_exp", total_exp + exp_gain)
+            setattr(_inv.state.Stats, "current_hp", current_hp)
+            total_exp = getattr(_inv.state.Levels, "player_exp")
+            setattr(_inv.state.Levels, "player_exp", total_exp + exp_gain)
 
             if not alive:
                 continue

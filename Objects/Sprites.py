@@ -1,4 +1,4 @@
-from typing import NewType, Callable, List, Type, Optional, Tuple
+from typing import List, Type, Optional
 
 from .Items import ItemType, ArmourType
 

@@ -1,11 +1,12 @@
-from typing import Optional, Union
 from contextlib import suppress
 
-from .Game import start_game
-from .Objects.Sprites import MenuSprites, MenuType, InventoryDisplayType
-from .InventorySystem import PlayerInv
+from Game import start_game
+from Objects.Sprites import MenuSprites
+from InventorySystem import InventoryBus, InventoryState, Inventory
 
-inv = PlayerInv()
+state = InventoryState()
+bus = InventoryBus()
+inv = Inventory(state, bus)
 exit_list = ["quit", "exit", "stop", "end"]
 
 
@@ -25,11 +26,11 @@ def start_menu() -> None:
     selection = selection.lower()
 
     if selection in ["1", "new game"]:
-        inv.new_player()
+        inv.state.new_player()
         return main_menu()
 
     elif selection in ["2", "load game"]:
-        inv.load_player()
+        inv.load()
         return main_menu()
 
     elif selection in ["3", "help"]:
@@ -63,14 +64,14 @@ def main_menu() -> None:
         return main_menu()
 
     elif selection in [2, "inventory"]:
-        inv.InventoryDisplay.inventory_display()
+        inv.display.inventory_display()
         return main_menu()
 
     elif selection in [3, "shop"]:
         pass
 
     elif selection in [4, "stats"]:
-        inv.InventoryDisplay.stats_display(in_loop=False)
+        inv.display.stats_display(in_loop=False)
         return main_menu()
 
     elif selection in [5, "save", "load"]:
@@ -80,11 +81,11 @@ def main_menu() -> None:
                 print("Invalid selection")
 
         if selection == "save":
-            inv.save_player()
+            inv.save()
             return main_menu()
 
         elif selection == "load":
-            inv.load_player()
+            inv.load()
             return main_menu()
 
     elif selection in [6, *exit_list]:
@@ -97,7 +98,7 @@ def main_menu() -> None:
         inp = input("Enter code")
 
         if inp == code:
-            inv.dev_mode = True
+            inv.state.dev_mode = True
 
         return main_menu()
 
