@@ -80,17 +80,17 @@ def print_direction(direction: str, first: bool) -> str:
     north_choices = [lan.mountain, lan.mountain_blocked,
                      lan.mountain_blocked, lan.mountain_blocked]
     west_choices = [lan.tree1, lan.tree2]
-    south_choices = None
-    east_choices = None
-    directions = {'n': north_choices, 'w': west_choices, 's': south_choices, 'e': east_choices}
+    south_choices = ["No display"]
+    east_choices = ["No display"]
+    directions: Dict[str] = {'n': north_choices, 'w': west_choices, 's': south_choices, 'e': east_choices}
     first_direction = {'n': lan.mountain_range, 'w': lan.forest, 's': None, 'e': None}
 
     if first:
         selection = first_direction[direction]
 
     else:
-        direction = directions[direction]
-        selection = direction[random.randint(1, len(direction)) - 1]
+        player_direction = directions[direction]
+        selection = player_direction[random.randint(1, len(player_direction)) - 1]
 
     return selection
 
