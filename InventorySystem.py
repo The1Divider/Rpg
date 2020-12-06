@@ -282,7 +282,6 @@ class InventoryPersistance:
 
         if item_weight == 1 and (weapon_slot_1_weight == 0 or weapon_slot_2_weight == 0):
             slot = "weapon1" if weapon_slot_1_weight == 0 else "weapon2"
-            print(slot)
             setattr(self.state.Weapons, slot, item)
         
         elif item_weight == 1 and (weapon_slot_1_weight != 0 and weapon_slot_1_weight != 0):
@@ -407,7 +406,7 @@ class InventoryPersistance:
                 selected_item = getattr(self.state.Weapons, weapon_slot)
                 print(selected_item)
                 if selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
-                    setattr(self.state.Weapons, weapon_slot, None)
+                    setattr(self.state.Weapons, weapon_slot, UnknownItem)
                     self.state.bag.put(selected_item)
                     return None
             else:
@@ -422,7 +421,7 @@ class InventoryPersistance:
         
         if index is not None and index in ["weapon1", "weapon2"]:
             selected_item = getattr(self.state.Weapons, index)
-            setattr(self.state.Weapons, index, None)
+            setattr(self.state.Weapons, index, UnknownItem)
             self.state.bag.put(selected_item)
             return None
         else:
