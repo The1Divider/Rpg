@@ -406,7 +406,7 @@ class InventoryPersistance:
                 selected_item = getattr(self.state.Weapons, weapon_slot)
                 print(selected_item)
                 if selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
-                    setattr(self.state.Weapons, weapon_slot, UnknownItem)
+                    setattr(self.state.Weapons, weapon_slot, UnknownItem())
                     self.state.bag.put(selected_item)
                     return None
             else:
@@ -421,7 +421,7 @@ class InventoryPersistance:
         
         if index is not None and index in ["weapon1", "weapon2"]:
             selected_item = getattr(self.state.Weapons, index)
-            setattr(self.state.Weapons, index, UnknownItem)
+            setattr(self.state.Weapons, index, UnknownItem())
             self.state.bag.put(selected_item)
             return None
         else:
