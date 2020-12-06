@@ -120,8 +120,8 @@ class Encounter(Stats):
         self.enemy_alive, self.player_alive = True, True
         self.exp_gain = 0
 
-        stats_list = self.inv.display.stats_setup(in_loop=True)
-        super().__init__(*stats_list)
+        stats_list, current_hp = self.inv.display.stats_setup(in_loop=True)
+        super().__init__(*stats_list, current_hp)
         self.enemy_setup(self.en)
 
         self.main_loop()

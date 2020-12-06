@@ -60,7 +60,7 @@ class MenuSprites:
             menu_line5 = f"| Exp         | [{exp_bars}] |\n"
             menu_line6 = "|-------------------------------|\n"
             menu_line7 = f"| Hp          | {hp} + {armour_hp} |\n"
-            menu_line8 = f"| Current Hp  | {current_hp}"
+            menu_line8 = f"| Current Hp  | {current_hp} |\n"
             menu_line9 = f"| Dmg         | {dmg} + {weapon_dmg} |\n"
             menu_line10 = f"| Defence     | {defence} + {armour_defence} |\n"
             menu_line11 = f"| Crit        | {crit} + {weapon_crit} |\n"

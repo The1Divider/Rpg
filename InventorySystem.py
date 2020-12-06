@@ -8,32 +8,35 @@ from Objects.Items import ItemList, UnknownItem, UnknownArmour, ItemType, Armour
 from Objects.Sprites import MenuSprites
 
 
-class EmptyBag(Exception):
+class Error(Exception): pass
+
+
+class EmptyBag(Error):
     pass
 
 
-class InvalidIndex(Exception):
+class InvalidIndex(Error):
     pass
 
 
-class NotInBag(Exception):
+class NotInBag(Error):
     pass
 
 
-class FullBag(Exception):
+class FullBag(Error):
     pass
 
 
-class TooManySelections(Exception):
+class TooManySelections(Error):
     pass
 
 
-class NoSelection(Exception):
+class NoSelection(Error):
     def __init__(self, message="How stupid are you, read the docstrings"):
         super().__init__(message)
     
 
-class ThisShouldntComeUp(Exception):
+class ThisShouldntComeUp(Error):
     def __init__(self, message="How??!?"):
         super().__init__(message)
 
@@ -90,8 +93,11 @@ class InventoryBus:
         self.listeners[event_name].append(callback)
 
     def emit(self, event_name, payload):
-        for listener in self.listeners.get(event_name, default=[]):
-            cargo: Optional[ItemType] = listener(*payload)
+        for listener in self.listeners.get(event_name, []):
+            if isinstance(payload, List):
+                cargo: Optional[ItemType] = listener(*payload)
+            else:
+                cargo: Optional[ItemType] = listener(payload)
             if cargo is not None:
                 return cargo
 
@@ -131,19 +137,18 @@ class InventoryState:
 
     def new_player(self) -> None:
         """give new player preset items"""
-        [setattr(self.Armour, attribute, None)
+        [setattr(self.Armour, attribute, UnknownArmour())
          for attribute in self.armour_slots]
-        [setattr(self.Weapons, attribute, None) if attribute != "quiver" else 
+        [setattr(self.Weapons, attribute, UnknownItem()) if attribute != "quiver" else 
          setattr(self.Weapons, attribute, 0) for attribute in self.weapon_slots]
         [setattr(self.Stats, attribute, value)
          for attribute, value in zip(self.stat_slots, [10, 1, 0, 0, 0, 0])]
         [setattr(self.Levels, attribute, value)
          for attribute, value in zip(self.level_slots, [None, 1, 0])]
-        print(self.Weapons.quiver)
         self.Armour.ring1 = ItemList.wedding_ring
-        self.bag.put(ItemList.rock)
         self.Armour.helmet = ItemList.straw_sunhat
         self.Weapons.weapon1 = ItemList.basic_sword
+        self.bag.put(ItemList.rock)
 
 
 @dataclass
@@ -253,10 +258,10 @@ class InventoryPersistance:
             raise NoSelection
         
         elif weapon_name is not None:
-            item = self.get_weapon_from_bag_with_weapon_name(weapon_name=weapon_name, copy=True)
+            item = self.get_weapon_from_bag_with_weapon_name(weapon_name=weapon_name, copy=False)
 
         elif index is not None:
-            item = self.get_weapon_from_bag_with_index(index=index, copy=True)
+            item = self.get_weapon_from_bag_with_index(index=index, copy=False)
 
         else:
             raise TooManySelections
@@ -266,39 +271,40 @@ class InventoryPersistance:
         weapon2 = self.state.Weapons.weapon2
         size = self.state.bag.qsize()
 
-        with suppress(AttributeError):
-            item_name = item.name
-            item_weight = item.item_weight
-            weapon1 = self.state.Weapons.weapon1
-            weapon_slot_1_name = weapon1.name
-            weapon_slot_1_weight = weapon1.item_weight
-            weapon2 = self.state.Weapons.weapon2
-            weapon_slot_2_name = weapon2.name
-            weapon_slot_2_weight = weapon2.item_weight
+        item_name = item.name
+        item_weight = item.item_weight
+        weapon1 = self.state.Weapons.weapon1
+        weapon_slot_1_name = weapon1.name
+        weapon_slot_1_weight = weapon1.item_weight
+        weapon2 = self.state.Weapons.weapon2
+        weapon_slot_2_name = weapon2.name
+        weapon_slot_2_weight = weapon2.item_weight
 
-        if item_weight == 1 and (weapon_slot_1_weight is None or weapon_slot_2_weight is None):
-            slot = "weapon1" if weapon_slot_1_weight is None else "weapon2"
-            setattr(self.state, slot, item)
+        if item_weight == 1 and (weapon_slot_1_weight == 0 or weapon_slot_2_weight == 0):
+            slot = "weapon1" if weapon_slot_1_weight == 0 else "weapon2"
+            print(slot)
+            setattr(self.state.Weapons, slot, item)
         
-        elif item_weight == 1 and (weapon_slot_1_weight is not None and weapon_slot_1_weight is not None):
+        elif item_weight == 1 and (weapon_slot_1_weight != 0 and weapon_slot_1_weight != 0):
             print(f"Which weapon would you like to replace?: \n \
-                    1) Weapon 1 - {weapon_slot_1_name} \n \
-                    2) Weapon 2 - {weapon_slot_2_name} \n \
-                    3) Cancel\n")
+                   \r 1) Weapon 1 - {weapon_slot_1_name} \n \
+                   \r 2) Weapon 2 - {weapon_slot_2_name} \n \
+                   \r 3) Cancel \n")
+
             while (selection := input(">").lower().replace(" ", "")) not in \
-                ("weapon1", "weapon2", "cancel", weapon_slot_1_name, weapon_slot_2_name, 1, 2, 3):
+                ("weapon1", "weapon2", "cancel", weapon_slot_1_name, weapon_slot_2_name, "1", "2", "3"):
                 print("Invalid selection\n")
 
-            if selection in ("weapon1", weapon_slot_1_name, 1):
+            if selection in ("weapon1", weapon_slot_1_name, "1"):
                 slot = "weapon1"
                 to_replace = getattr(self.state.Weapons, "weapon1")
 
 
-            elif selection in ("weapon2", weapon_slot_2_name, 2):
+            elif selection in ("weapon2", weapon_slot_2_name, "2"):
                 slot = "weapon2"
                 to_replace = getattr(self.state.Weapons, "weapon2")
 
-            elif selection in ("cancel", 3):
+            elif selection in ("cancel", "3"):
                 slot = None
                 to_replace = item
             
@@ -309,12 +315,12 @@ class InventoryPersistance:
                 setattr(self.state.Weapons, slot, item)
             self.state.bag.put(to_replace)
         
-        elif item_weight == 2 and (weapon_slot_1_weight is None and weapon_slot_2_weight is None):
+        elif item_weight == 2 and (weapon_slot_1_weight == 0 and weapon_slot_2_weight == 0):
             if size > 8:
                 raise FullBag
             setattr(self.state.Weapons, "weapon1", item)
 
-        elif item_weight == 2 and (weapon_slot_1_weight is not None or weapon_slot_1_weight is not None):
+        elif item_weight == 2 and (weapon_slot_1_weight != 0 or weapon_slot_1_weight != 0):
             while (selection := input(f"Would you like to replace both your weapons with \
                 {item_name}\n").lower()) not in ('y', "yes", 'n', "no"):
                 print("Invalid selection")
@@ -373,7 +379,7 @@ class InventoryPersistance:
         if bag_size == 0:
             raise EmptyBag
 
-        if index > bag_size and index:
+        if index > bag_size:
             raise InvalidIndex
 
         bag_item = self.state.bag.get()
@@ -399,6 +405,7 @@ class InventoryPersistance:
         if weapon_name is not None:
             for weapon_slot in self.state.weapon_slots:
                 selected_item = getattr(self.state.Weapons, weapon_slot)
+                print(selected_item)
                 if selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
                     setattr(self.state.Weapons, weapon_slot, None)
                     self.state.bag.put(selected_item)
@@ -463,7 +470,7 @@ class InventoryDisplay:
     state: InventoryState
     bus: InventoryBus
 
-    def stats_setup(self, in_loop: bool) -> List:
+    def stats_setup(self, in_loop: bool) -> Tuple[List, int]:
         """
         :return: [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
                   weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
@@ -513,11 +520,10 @@ class InventoryDisplay:
 
         if in_loop:
             current_hp = self.state.Stats.current_hp
-            self.stat_list_temp.append(current_hp)
-            return self.stat_list_temp
+            return self.stat_list_temp, current_hp
 
         else:
-            return self.stat_list_temp
+            return self.stat_list_temp, 0
 
     def inventory_display(self) -> None:  # class
         """Displays with setup"""
@@ -543,19 +549,19 @@ class InventoryDisplay:
                 print(f"Invalid Selection: {selection}")
 
             if selection == "1":
-                armour_selection = input("Selection: ").lower().replace(" ", "_")
+                armour_selection = input("Selection: ").lower()
                 armour_selection_list = ("helmet", "chestplate", "leggings", "boots", "ring1", "ring2")
 
-                if armour_selection.replace("_", "") in armour_selection_list:
+                if armour_selection.replace(" ", "") in armour_selection_list:
                     armour = getattr(self.state.Armour, armour_selection)
                     print(MenuSprites.InventoryMenus.armour_selection(armour))
 
                 else:
-                    armour_selection = armour_selection.title()
+                    _armour_selection = armour_selection.title()
                     armour_list_names = [armour.name for armour in armour_list]
 
-                    if armour_selection in armour_list_names:
-                        index = armour_list_names.index(armour_selection)
+                    if _armour_selection in armour_list_names:
+                        index = armour_list_names.index(_armour_selection)
                         print(MenuSprites.InventoryMenus.armour_selection(armour_list[index]))
 
                     else:
@@ -595,7 +601,8 @@ class InventoryDisplay:
 
                 else:
                     weapon_selection = weapon_selection.title()
-                    weapon_list_names = [weapon.name for weapon in weapon_list]
+                    print(weapon_list)
+                    weapon_list_names = [weapon for weapon in weapon_list]
 
                     if weapon_selection in weapon_list_names:
                         index = weapon_list_names.index(weapon_selection)
@@ -640,29 +647,29 @@ class InventoryDisplay:
         def bag_menu() -> None:
             bag_list: List[Union[ItemType, UnknownItemType]] = []
 
-            for index in range(1, 10):
+            for index in range(1, 11):
                 try:
                     item: Optional[Union[ItemType, UnknownItemType]] = \
-                        self.bus.emit("get_weapon_from_bag_with_index", index)
+                        self.bus.emit("get_weapon_from_bag_with_index", [index, True])
 
                     if item == None:
                         raise ThisShouldntComeUp
 
                     bag_list.append(item)
 
-                except Exception as e:
-                    if e == NoSelection:
-                        raise NoSelection
+                except NoSelection:
+                    raise NoSelection
 
-                    elif e == EmptyBag:
-                        bag_list = [*[UnknownItem()] * 10]
-                        break
+                except EmptyBag:
+                    item = UnknownItem()
+                    bag_list.append(item)
                     
-                    elif e == InvalidIndex:
-                        item = UnknownItem()
-                        bag_list.append(item)
+                except InvalidIndex:
+                    item = UnknownItem()
+                    bag_list.append(item)
 
             print(bag_display(bag_list))
+
             input_message = "1) Select Item, 2) Equip Weapon, 3) Drop Weapon 4) Previous Page, 5) Exit\n"
             
             while (selection := input(input_message)) not in ("1", "2", "3", "4", "5"):
@@ -674,10 +681,10 @@ class InventoryDisplay:
                 try:
                     if weapon_selection in [str(number) for number in range(1, 11)]:
                         index = int(weapon_selection)
-                        item = self.bus.emit("get_weapon_from_bag_with_index", (index, True))
+                        item = self.bus.emit("get_weapon_from_bag_with_index", [index, True])
 
                     else:
-                        item = self.bus.emit("get_weapon_from_bag_with_weapon_name", (weapon_selection, True))
+                        item = self.bus.emit("get_weapon_from_bag_with_weapon_name", [weapon_selection, True])
                     
                     if item is None:
                         raise ThisShouldntComeUp
@@ -701,10 +708,10 @@ class InventoryDisplay:
 
                 try:
                     if weapon_selection in [str(number) for number in range(1, 11)]:
-                        self.bus.emit("equip_weapon", (None, int(weapon_selection)))
+                        self.bus.emit("equip_weapon", [None, int(weapon_selection)])
 
                     else:
-                        self.bus.emit("equip_weapon", (weapon_selection, None))
+                        self.bus.emit("equip_weapon", [weapon_selection, None])
 
                 except EmptyBag:
                     print("There's nothing to equip")
@@ -724,10 +731,10 @@ class InventoryDisplay:
 
                 try:
                     if weapon_selection in [str(number) for number in range(1, 11)]:
-                        self.bus.emit("drop_weapon", (None, int(weapon_selection)))
+                        self.bus.emit("drop_weapon", [None, int(weapon_selection)])
 
                     else:
-                        self.bus.emit("drop_weapon", (weapon_selection, None))
+                        self.bus.emit("drop_weapon", [weapon_selection, None])
 
                 except EmptyBag:
                     print("There's nothing to drop")
