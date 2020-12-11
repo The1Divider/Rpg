@@ -10,25 +10,17 @@ from Objects.Sprites import MenuSprites
 
 class Error(Exception): pass
 
+class EmptyBag(Error): pass
 
-class EmptyBag(Error):
-    pass
+class InvalidIndex(Error): pass
 
+class NotInBag(Error): pass
 
-class InvalidIndex(Error):
-    pass
+class FullBag(Error): pass
 
+class TooManySelections(Error): pass
 
-class NotInBag(Error):
-    pass
-
-
-class FullBag(Error):
-    pass
-
-
-class TooManySelections(Error):
-    pass
+class NoItem(Error): pass
 
 
 class NoSelection(Error):
@@ -110,8 +102,9 @@ class InventoryState:
         self.required_exp_percent: int = 0
         self.required_exp: int = 0
 
-        self.queue_max_size: int = 10
-        self.bag: queue.Queue = queue.Queue(maxsize=self.queue_max_size)
+        queue_max_size: int = 10
+        self.weapon_bag: queue.Queue = queue.Queue(maxsize=queue_max_size)
+        self.armour_bag: queue.Queue = queue.Queue(maxsize=queue_max_size)
 
         self.Armour: Armour = Armour()
         self.Weapons: Weapons = Weapons()
@@ -148,7 +141,7 @@ class InventoryState:
         self.Armour.ring1 = ItemList.wedding_ring
         self.Armour.helmet = ItemList.straw_sunhat
         self.Weapons.weapon1 = ItemList.basic_sword
-        self.bag.put(ItemList.rock)
+        self.weapon_bag.put(ItemList.rock)
 
 
 @dataclass
@@ -269,7 +262,7 @@ class InventoryPersistance:
         item_weight, weapon_slot_1_weight, weapon_slot_2_weight = None, None, None
         weapon1 = self.state.Weapons.weapon1
         weapon2 = self.state.Weapons.weapon2
-        size = self.state.bag.qsize()
+        size = self.state.weapon_bag.qsize()
 
         item_name = item.name
         item_weight = item.item_weight
@@ -312,7 +305,7 @@ class InventoryPersistance:
 
             if slot is not None:
                 setattr(self.state.Weapons, slot, item)
-            self.state.bag.put(to_replace)
+            self.state.weapon_bag.put(to_replace)
         
         elif item_weight == 2 and (weapon_slot_1_weight == 0 and weapon_slot_2_weight == 0):
             if size > 8:
@@ -325,7 +318,7 @@ class InventoryPersistance:
                 print("Invalid selection")
 
             if selection in ('n', "no"):
-                self.state.bag.put(item)
+                self.state.weapon_bag.put(item)
 
             elif selection in ('y', "yes"):
                 if size > 8:
@@ -334,16 +327,16 @@ class InventoryPersistance:
                     item1 = getattr(self.state.Weapons, "weapon1")
                     item2 = getattr(self.state.Weapons, "weapon2")
                 setattr(self.state.Weapons, "weapon1", item)
-                self.state.bag.put(item1)
-                self.state.bag.put(item2)
+                self.state.weapon_bag.put(item1)
+                self.state.weapon_bag.put(item2)
 
             else:
-                self.state.bag.put(item)
+                self.state.weapon_bag.put(item)
                 raise ThisShouldntComeUp
 
     def get_weapon_from_bag_with_weapon_name(self, weapon_name: str, copy: bool) -> ItemType:
         bag_item = None
-        bag_size = self.state.bag.qsize()
+        bag_size = self.state.weapon_bag.qsize()
 
         if weapon_name is None:
             raise NoSelection
@@ -351,26 +344,26 @@ class InventoryPersistance:
         if bag_size == 0:
             raise EmptyBag
 
-        bag_item = self.state.bag.get()
+        bag_item = self.state.weapon_bag.get()
 
         while bag_item.name.lower() != weapon_name and bag_size > 0:
-            self.state.bag.put(bag_item)
-            bag_item = self.state.bag.get()
+            self.state.weapon_bag.put(bag_item)
+            bag_item = self.state.weapon_bag.get()
             bag_size -= 1
 
         if bag_size == 0 and bag_item.name.lower() != weapon_name:
-            self.state.bag.put(bag_item)
+            self.state.weapon_bag.put(bag_item)
             raise NotInBag
 
         if copy and bag_item is not None:
             bag_item_temp = bag_item
-            self.state.bag.put(bag_item_temp)
+            self.state.weapon_bag.put(bag_item_temp)
 
         return bag_item
 
     def get_weapon_from_bag_with_index(self, index: int, copy: bool) -> ItemType:
         bag_item = None
-        bag_size = self.state.bag.qsize()
+        bag_size = self.state.weapon_bag.qsize()
 
         if index is None:
             raise NoSelection
@@ -381,16 +374,16 @@ class InventoryPersistance:
         if index > bag_size:
             raise InvalidIndex
 
-        bag_item = self.state.bag.get()
+        bag_item = self.state.weapon_bag.get()
 
         while index >= 1:
-            self.state.bag.put(bag_item)
-            bag_item = self.state.bag.get()
+            self.state.weapon_bag.put(bag_item)
+            bag_item = self.state.weapon_bag.get()
             index -= 1
 
         if copy and bag_item is not None:
             bag_item_temp = bag_item
-            self.state.bag.put(bag_item_temp)
+            self.state.weapon_bag.put(bag_item_temp)
 
         return bag_item
 
@@ -398,16 +391,18 @@ class InventoryPersistance:
         if weapon_name is None:
             raise NoSelection
 
-        if self.state.bag.full():
+        if self.state.weapon_bag.full():
             raise FullBag
 
         if weapon_name is not None:
             for weapon_slot in self.state.weapon_slots:
                 selected_item = getattr(self.state.Weapons, weapon_slot)
                 print(selected_item)
-                if selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
+                if selected_item.name == None:
+                    pass
+                elif selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
                     setattr(self.state.Weapons, weapon_slot, UnknownItem())
-                    self.state.bag.put(selected_item)
+                    self.state.weapon_bag.put(selected_item)
                     return None
             else:
                 raise NotInBag
@@ -416,13 +411,17 @@ class InventoryPersistance:
         if index is None:
             raise NoSelection
 
-        if self.state.bag.full():
+        if self.state.weapon_bag.full():
             raise FullBag
         
         if index is not None and index in ["weapon1", "weapon2"]:
             selected_item = getattr(self.state.Weapons, index)
+
+            if isinstance(selected_item, UnknownItem):
+                raise NoItem
+
             setattr(self.state.Weapons, index, UnknownItem())
-            self.state.bag.put(selected_item)
+            self.state.weapon_bag.put(selected_item)
             return None
         else:
             raise InvalidIndex
@@ -436,8 +435,6 @@ class InventoryPersistance:
         ...
 
     def drop_weapon(self, weapon_name: Optional[str], index: Optional[int]) -> None:
-        # no need to error handle this because drop_weapon will be handled
-
         selected_item = None
 
         if weapon_name is not None and index is not None:
@@ -455,7 +452,7 @@ class InventoryPersistance:
             print("Invalid selection [y/n]")
 
         if selection in ["n", "no"]:
-            self.state.bag.put(selected_item)
+            self.state.weapon_bag.put(selected_item)
             print(f"{weapon_name} has been returned to your bag")
 
         elif selection in ["y", "yes"]:
@@ -631,6 +628,9 @@ class InventoryDisplay:
 
                 except (NotInBag, InvalidIndex) as _:
                     print(f"Invalid selection: {weapon_selection}")
+
+                except NoItem:
+                    print("There's nothing to unequip in that slot")
 
                 weapon_menu()
 

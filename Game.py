@@ -10,68 +10,53 @@ from Objects.Enemies import *
 
 SCALE = 10
 
+class Error(Exception): pass
+class InvalidDirection(Error): pass
 
 class Displacement:
     def __init__(self) -> None:
         self.last_direction: Optional[str] = None
-        self.north: int = 0
-        self.west: int = 0
-        self.south: int = 0
-        self.east: int = 0
-        self.directions: Dict = {'n': [i for i in range(45, 135)],
-                                 'w': [i for i in range(135, 225)],
-                                 's': [i for i in range(225, 315)],
-                                 'e': [*[i for i in range(315, 360)], *[i for i in range(45)]]}
+        self.x: int = 0
+        self.y: int = 0
+        self.directions: Dict = {'north': (0, 1),
+                                 'west': (1, 0),
+                                 'south': (0, -1),
+                                 'east': (-1, 0)}
 
-    def __call__(self, direction: str) -> Optional[str]:
+    def __call__(self, direction: str) -> Tuple[str, bool]:
         """return new displacement of player based on past """
-        setattr(self, direction, getattr(self, direction) + 1)
-        self.vertical: int = self.north - self.south
-        self.horizontal: int = self.east - self.west
+        try:
+            dx, dy = self.directions[direction]
 
-        if self.horizontal + self.vertical == 0 and self.south - self.north == self.vertical \
-                and self.west - self.east == self.horizontal:
-            return None
+        except KeyError:
+            raise InvalidDirection
 
-        elif self.horizontal == 0 and not (self.north == 0 and self.south == 0):
+        self.x += dx
+        self.y += dy
 
-            if self.vertical > 0:
-                direction = 'n'
+        if self.x > self.y and self.x > 0:
+            direction = "west"
 
-            elif self.vertical < 0:
+        elif self.x > self.y and self.x < 0:
+            direction = "east"
 
-                direction = 's'
+        elif self.x < self.y and self.y > 0:
+            direction = "north"
 
-        elif self.vertical == 0 and not (self.west == 0 and self.east == 0):
+        elif self.x < self.y and self.y < 0:
+            direction = "south"
 
-            if self.horizontal > 0:
-                direction = 'e'
+        elif self.x == 0 and self.y == 0:
+            direction = "returned"
 
-            elif self.horizontal < 0:
-                direction = 'w'
-
-        else:
-            ans = math.atan2(self.vertical, self.horizontal) * (180 / math.pi)
-
-            if ans < 0:
-                ans += 360
-
-            for key, value in self.directions.items():
-                if int(ans) in value:
-                    direction = key
-
-        if direction != self.last_direction or direction is None:
+        if direction != self.last_direction:
             self.last_direction = direction
             first = True
-
+        
         else:
             first = False
 
-        return print_direction(direction, first)
-
-    def average(self) -> Tuple[int, int]:
-        return abs(self.vertical), abs(self.horizontal)
-
+        return direction, first
 
 def print_direction(direction: str, first: bool) -> str:
     """Prints the landscape the player encounters based on which biome (direction) they're in
@@ -82,8 +67,14 @@ def print_direction(direction: str, first: bool) -> str:
     west_choices = [lan.tree1, lan.tree2]
     south_choices = ["No display"]
     east_choices = ["No display"]
-    directions: Dict[str] = {'n': north_choices, 'w': west_choices, 's': south_choices, 'e': east_choices}
-    first_direction = {'n': lan.mountain_range, 'w': lan.forest, 's': None, 'e': None}
+    directions: Dict[str] = {"north": north_choices,
+                             "west": west_choices,
+                             "south": south_choices,
+                             "east": east_choices}
+    first_direction = {"north": lan.mountain_range,
+                       "west": lan.forest,
+                       "south": "No first display",
+                       "east": "No first display"}
 
     if first:
         selection = first_direction[direction]
@@ -227,9 +218,10 @@ class Encounter(Stats):
 
 
 def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
-    """Calculates the chance of having an encounter
-       Based on the sigmoid -> closer to (0,0) = low encounter chance
-                               further (~60 displacement) = 99% encounter chance"""
+    """Calculates the chance of having an encounter \n
+       Based on the sigmoid function:
+        - closer to (0,0) = low encounter chance
+        - ~60 displacement = 99% encounter chance"""
     total_chance = 0
     for distance in (distance_x, distance_y):
         total_chance += round(abs((1 / (1 + math.e ** -(distance / SCALE)) - 0.5) * 200))
@@ -257,9 +249,21 @@ def start_game(_inv: Inventory) -> None:
         alive = True
 
     while alive:
-        moved = move(choice)
-        distance_away_x, distance_away_y = move.average()
-        encounter_chance = encounter_xy_sigmoid(distance_away_x, distance_away_y)
+        try:
+            moved, first = move(choice)
+
+            if moved == "returned":
+                print("You've returned to the village")
+                return None
+                
+            print(print_direction(moved, first))
+
+        except InvalidDirection:
+            print(f"Invalid direction: {choice}")
+            choice = input(choice_message).lower()
+            continue
+
+        encounter_chance = encounter_xy_sigmoid(abs(move.x), abs(move.y))
 
         if random.randint(1, 100) in range(encounter_chance):
             encounter = Encounter(_inv, enemy=Rat())
@@ -271,12 +275,5 @@ def start_game(_inv: Inventory) -> None:
             if not alive:
                 continue
 
-        if moved is None:
-            print("You've returned to the village")
-            return None
-
         else:
-            print(moved)
-
-        while (choice := input(choice_message).lower()) not in ["north", "south", "east", "west"]:
-            print("Invalid direction (north, south, east, west)\n")
+            choice = input(choice_message)
