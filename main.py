@@ -1,11 +1,16 @@
-from Game import *
-from Objects.Sprites import MenuSprites, MenuType, InventoryDisplayType
+from contextlib import suppress
 
-inv = Inventory()
+from Game import start_game
+from Objects.Sprites import MenuSprites
+from InventorySystem import InventoryBus, InventoryState, Inventory
+
+state = InventoryState()
+bus = InventoryBus()
+inv = Inventory(state, bus)
 exit_list = ["quit", "exit", "stop", "end"]
 
 
-def start_menu() -> Optional[MenuType]:
+def start_menu() -> None:
     """Start menu of the game
        Contains access to:
         - Opening a game:
@@ -18,28 +23,24 @@ def start_menu() -> Optional[MenuType]:
     while (selection := input(">").lower()) not in option_list:
         print(f"Invalid selection: {selection}")
 
-    with suppress(ValueError):
-        selection = int(selection)
+    selection = selection.lower()
 
-    if type(selection) != int:
-        selection = selection.lower()
-
-    if selection in [1, "new game"]:
-        inv.new_player()
+    if selection in ["1", "new game"]:
+        inv.state.new_player()
         return main_menu()
 
-    elif selection in [2, "load game"]:
-        inv.load_player()
+    elif selection in ["2", "load game"]:
+        inv.load()
         return main_menu()
 
-    elif selection in [3, "help"]:
+    elif selection in ["3", "help"]:
         pass
 
-    elif selection in [4, *exit_list]:
+    elif selection in ["4", *exit_list]:
         quit()
 
 
-def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
+def main_menu() -> None:
     """Main menu of the game
        Contains access to:
         - Main loop
@@ -63,14 +64,14 @@ def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
         return main_menu()
 
     elif selection in [2, "inventory"]:
-        inv.inventory_display()
+        inv.display.inventory_display()
         return main_menu()
 
     elif selection in [3, "shop"]:
         pass
 
     elif selection in [4, "stats"]:
-        inv.stats_display(in_loop=False)
+        inv.display.stats_display(in_loop=False)
         return main_menu()
 
     elif selection in [5, "save", "load"]:
@@ -80,11 +81,11 @@ def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
                 print("Invalid selection")
 
         if selection == "save":
-            inv.save_player()
+            inv.save()
             return main_menu()
 
         elif selection == "load":
-            inv.load_player()
+            inv.load()
             return main_menu()
 
     elif selection in [6, *exit_list]:
@@ -97,10 +98,8 @@ def main_menu() -> Optional[Union[MenuType, InventoryDisplayType]]:
         inp = input("Enter code")
 
         if inp == code:
-            inv.dev_mode = True
+            inv.state.dev_mode = True
 
         return main_menu()
 
-
-if __name__ == "__main__":
-    start_menu()
+start_menu()

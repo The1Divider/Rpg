@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-from Objects.Sprites import EnemySprites as Es
-from Objects.Sprites import EnemySpriteType
+from .Sprites import EnemySprites as Es
 
 """
 @dataclass
@@ -22,8 +21,8 @@ class Enemy:
 @dataclass
 class Rat:
     name: str = "Rat"
-    passive_sprite: EnemySpriteType = Es.rat_passive
-    aggro_sprite: EnemySpriteType = Es.rat_aggressive
+    passive_sprite: str = Es.rat_passive
+    aggro_sprite: str = Es.rat_aggressive
     level: int = 1
     level_cap: int = 5
 

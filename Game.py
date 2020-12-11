@@ -1,76 +1,62 @@
 import math
 import random
 
-from typing import Dict
+from dataclasses import dataclass
+from typing import Dict, Any, Optional, Tuple
 
 from InventorySystem import *
-from Objects.Sprites import *
+from Objects.Sprites import LandscapeSprites
 from Objects.Enemies import *
 
 SCALE = 10
 
+class Error(Exception): pass
+class InvalidDirection(Error): pass
 
 class Displacement:
     def __init__(self) -> None:
         self.last_direction: Optional[str] = None
-        self.north: int = 0
-        self.west: int = 0
-        self.south: int = 0
-        self.east: int = 0
-        self.directions: Dict = {'n': [i for i in range(45, 135)],
-                                 'w': [i for i in range(135, 225)],
-                                 's': [i for i in range(225, 315)],
-                                 'e': [*[i for i in range(315, 360)], *[i for i in range(45)]]}
+        self.x: int = 0
+        self.y: int = 0
+        self.directions: Dict = {'north': (0, 1),
+                                 'west': (1, 0),
+                                 'south': (0, -1),
+                                 'east': (-1, 0)}
 
-    def __call__(self, direction: str) -> Optional[str]:
+    def __call__(self, direction: str) -> Tuple[str, bool]:
         """return new displacement of player based on past """
-        setattr(self, direction, getattr(self, direction) + 1)
-        self.vertical: int = self.north - self.south
-        self.horizontal: int = self.east - self.west
+        try:
+            dx, dy = self.directions[direction]
 
-        if self.horizontal + self.vertical == 0 and self.south - self.north == self.vertical \
-                and self.west - self.east == self.horizontal:
-            return None
+        except KeyError:
+            raise InvalidDirection
 
-        elif self.horizontal == 0 and not (self.north == 0 and self.south == 0):
+        self.x += dx
+        self.y += dy
 
-            if self.vertical > 0:
-                direction = 'n'
+        if self.x > self.y and self.x > 0:
+            direction = "west"
 
-            elif self.vertical < 0:
+        elif self.x > self.y and self.x < 0:
+            direction = "east"
 
-                direction = 's'
+        elif self.x < self.y and self.y > 0:
+            direction = "north"
 
-        elif self.vertical == 0 and not (self.west == 0 and self.east == 0):
+        elif self.x < self.y and self.y < 0:
+            direction = "south"
 
-            if self.horizontal > 0:
-                direction = 'e'
+        elif self.x == 0 and self.y == 0:
+            direction = "returned"
 
-            elif self.horizontal < 0:
-                direction = 'w'
-
-        else:
-            ans = math.atan2(self.vertical, self.horizontal) * (180 / math.pi)
-
-            if ans < 0:
-                ans += 360
-
-            for key, value in self.directions.items():
-                if int(ans) in value:
-                    direction = key
-
-        if direction != self.last_direction or direction is None:
+        if direction != self.last_direction:
             self.last_direction = direction
             first = True
-
+        
         else:
             first = False
 
-        return print_direction(direction, first)
-
-    def average(self) -> Tuple[int, int]:
-        return abs(self.vertical), abs(self.horizontal)
-
+        return direction, first
 
 def print_direction(direction: str, first: bool) -> str:
     """Prints the landscape the player encounters based on which biome (direction) they're in
@@ -79,17 +65,23 @@ def print_direction(direction: str, first: bool) -> str:
     north_choices = [lan.mountain, lan.mountain_blocked,
                      lan.mountain_blocked, lan.mountain_blocked]
     west_choices = [lan.tree1, lan.tree2]
-    south_choices = None
-    east_choices = None
-    directions = {'n': north_choices, 'w': west_choices, 's': south_choices, 'e': east_choices}
-    first_direction = {'n': lan.mountain_range, 'w': lan.forest, 's': None, 'e': None}
+    south_choices = ["No display"]
+    east_choices = ["No display"]
+    directions: Dict[str] = {"north": north_choices,
+                             "west": west_choices,
+                             "south": south_choices,
+                             "east": east_choices}
+    first_direction = {"north": lan.mountain_range,
+                       "west": lan.forest,
+                       "south": "No first display",
+                       "east": "No first display"}
 
     if first:
         selection = first_direction[direction]
 
     else:
-        direction = directions[direction]
-        selection = direction[random.randint(1, len(direction)) - 1]
+        player_direction = directions[direction]
+        selection = player_direction[random.randint(1, len(player_direction)) - 1]
 
     return selection
 
@@ -119,9 +111,7 @@ class Encounter(Stats):
         self.enemy_alive, self.player_alive = True, True
         self.exp_gain = 0
 
-        self.armour_slots: List = ["helmet", "chestplate", "leggings", "boots", "ring1", "ring2"]
-        self.weapon_slots: List = ["weapon1", "weapon2", "quiver"]
-        stats_list, current_hp = self.inv.stats_setup(in_loop=True)
+        stats_list, current_hp = self.inv.display.stats_setup(in_loop=True)
         super().__init__(*stats_list, current_hp)
         self.enemy_setup(self.en)
 
@@ -164,9 +154,11 @@ class Encounter(Stats):
             print("You killed each other???")
             self.exp_gain = 0
 
+        return None
+
     def enemy_setup(self, en: Any) -> None:
         """Setup enemy stats based on enemy level which in turn is based on player level"""
-        player_level = self.inv.Levels.player_level
+        player_level = self.inv.state.Levels.player_level
         en.level = player_level if player_level <= self.en.level_cap else self.en.level_cap
         en.hp *= self.en.level
         en.dmg *= self.en.level
@@ -226,9 +218,10 @@ class Encounter(Stats):
 
 
 def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
-    """Calculates the chance of having an encounter
-       Based on the sigmoid -> closer to (0,0) = low encounter chance
-                               further (~60 displacement) = 99% encounter chance"""
+    """Calculates the chance of having an encounter \n
+       Based on the sigmoid function:
+        - closer to (0,0) = low encounter chance
+        - ~60 displacement = 99% encounter chance"""
     total_chance = 0
     for distance in (distance_x, distance_y):
         total_chance += round(abs((1 / (1 + math.e ** -(distance / SCALE)) - 0.5) * 200))
@@ -238,7 +231,7 @@ def encounter_xy_sigmoid(distance_x: int, distance_y: int) -> int:
 def start_game(_inv: Inventory) -> None:
     """Main game loop: moves + provides encounters to the player based on levels + which biome they're in """
     move = Displacement()
-    _inv.Stats.__post_init__()
+    _inv.state.Stats.__post_init__()
     print(LandscapeSprites.main_village)
     choice_message = "Which direction would you like to go?\n"
 
@@ -249,33 +242,38 @@ def start_game(_inv: Inventory) -> None:
                     "Someone hits you in the head with a rock", "Your neighbor reports you for soliciting"]
 
     if choice == "nowhere":
-        print(lazy_choices[random.randint(1, 4) - 1])
+        print(lazy_choices[random.randint(0, 3)])
         return None
 
     else:
         alive = True
 
     while alive:
-        moved = move(choice)
-        distance_away_x, distance_away_y = move.average()
-        encounter_chance = encounter_xy_sigmoid(distance_away_x, distance_away_y)
+        try:
+            moved, first = move(choice)
+
+            if moved == "returned":
+                print("You've returned to the village")
+                return None
+                
+            print(print_direction(moved, first))
+
+        except InvalidDirection:
+            print(f"Invalid direction: {choice}")
+            choice = input(choice_message).lower()
+            continue
+
+        encounter_chance = encounter_xy_sigmoid(abs(move.x), abs(move.y))
 
         if random.randint(1, 100) in range(encounter_chance):
             encounter = Encounter(_inv, enemy=Rat())
             current_hp, alive, exp_gain = encounter.player_current_hp, encounter.player_alive, encounter.exp_gain
-            setattr(_inv.Stats, "current_hp", current_hp)
-            total_exp = getattr(_inv.Levels, "player_exp")
-            setattr(_inv.Levels, "player_exp", total_exp + exp_gain)
+            setattr(_inv.state.Stats, "current_hp", current_hp)
+            total_exp = getattr(_inv.state.Levels, "player_exp")
+            setattr(_inv.state.Levels, "player_exp", total_exp + exp_gain)
 
             if not alive:
                 continue
 
-        if moved is None:
-            print("You've returned to the village")
-            return None
-
         else:
-            print(moved)
-
-        while (choice := input(choice_message).lower()) not in ["north", "south", "east", "west"]:
-            print("Invalid direction (north, south, east, west)\n")
+            choice = input(choice_message)
