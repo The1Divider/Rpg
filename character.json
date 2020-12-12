@@ -2,7 +2,6 @@
   "Armour": {
     "Helmet": {
       "Name": "Straw Sunhat",
-      "Item_Type": "helmet",
       "Hp": 1,
       "Defence": 0,
       "Special": "",
@@ -18,7 +17,6 @@
     "Boots": null,
     "Ring1": {
       "Name": "Wedding Ring",
-      "Item_Type": "ring",
       "Hp": 0,
       "Defence": 0,
       "Special": "Your last memory of the real world",
@@ -32,14 +30,39 @@
     "Ring2": null
   },
   "Weapons": {
-    "Weapon1": null,
+    "Weapon1": {
+      "Name": "Basic Sword",
+      "Item_weight": 1,
+      "Dmg": 5,
+      "Crit": 0,
+      "Crit_Chance": 0,
+      "Special": "Nothing, what did you expect?",
+      "Price": 1,
+      "Hidden": {
+        "Item_Id": 3,
+        "Req_Level": null,
+        "Sellable": true
+      }
+    },
     "Weapon2": null,
-    "Quiver": 0
+    "Quiver": {
+      "Name": "Basic Sword",
+      "Item_weight": 1,
+      "Dmg": 5,
+      "Crit": 0,
+      "Crit_Chance": 0,
+      "Special": "Nothing, what did you expect?",
+      "Price": 1,
+      "Hidden": {
+        "Item_Id": 3,
+        "Req_Level": null,
+        "Sellable": true
+      }
+    }
   },
   "Bag": [
     {
       "Name": "Rock",
-      "Item_type": "weapon",
       "Item_weight": 1,
       "Dmg": 1,
       "Crit": 0,
