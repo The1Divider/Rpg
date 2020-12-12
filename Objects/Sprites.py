@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from typing import List, Type, Optional, Union
 
-from .Items import ItemType, ArmourType, UnknownItemType, UnknownArmourType
+from .Items import WeaponType, ArmourType, UnknownWeaponType, UnknownArmourType
 
 
 class MenuSprites:
@@ -28,18 +29,18 @@ class MenuSprites:
             """Method to align inventory display regardless of item name size"""
             max_length = len(max(menu_list, key=len))
 
-            for i in menu_list:
+            for menu in menu_list:
 
-                ind = menu_list.index(i)
+                ind = menu_list.index(menu)
 
-                if i in special_list:
-                    while len(i) < max_length:
-                        i = i[:-2] + "-" + i[-2:]
-                        menu_list[ind] = i
+                if menu in special_list:
+                    while len(menu) < max_length:
+                        menu = menu[:-2] + "-" + menu[-2:]
+                        menu_list[ind] = menu
 
-                while len(i) < max_length:
-                    i = i[:-3] + " " + i[-3:]
-                    menu_list[ind] = i
+                while len(menu) < max_length:
+                    menu = menu[:-3] + " " + menu[-3:]
+                    menu_list[ind] = menu
 
             return "".join(menu_list)
 
@@ -95,7 +96,7 @@ class MenuSprites:
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line10])
 
         @staticmethod
-        def inventory_weapon_menu(weapon_list: List[Union[ItemType, UnknownItemType]]) -> str:
+        def inventory_weapon_menu(weapon_list: List[Union[WeaponType, UnknownWeaponType]]) -> str:
             weapon1, weapon2, quiver = weapon_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Weapons |\n"
@@ -110,7 +111,7 @@ class MenuSprites:
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line7])
 
         @staticmethod
-        def inventory_bag_menu(item_list: List[Union[ItemType, UnknownItemType]]) -> str:
+        def inventory_bag_menu(item_list: List[Union[WeaponType, UnknownWeaponType]]) -> str:
             item1, item2, item3, item4, item5, item6, item7, item8, item9, item10 = item_list
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Bag |\n"
@@ -128,7 +129,7 @@ class MenuSprites:
                 MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line9]))
 
         @staticmethod
-        def weapon_selection(weapon: Union[ItemType, UnknownItemType]) -> str:
+        def weapon_selection(weapon: Union[WeaponType, UnknownWeaponType]) -> str:
             weapon_values_names = ["name", "item_weight", "dmg", "crit", "crit_chance", "special", "price"]
             weapon_values = [getattr(weapon, attr) for attr in weapon_values_names]
             name, weight, dmg, crit, crit_chance, special, price = weapon_values
@@ -176,9 +177,66 @@ class MenuSprites:
 
             return MenuSprites.InventoryMenus.inventory_menu_spacing(menu_list, [menu_line1, menu_line3, menu_line8])
 
-    shop_menu_main = None
-    shop_menu_buy = None
-    shop_menu_sell = None
+    class ShopMenus:
+        @staticmethod
+        def shop_menu_spacing(menu_list: List[str], special_list: List[int]) -> str:
+            """Method to align inventory display regardless of item name size"""
+            max_length = len(max(menu_list, key=len))
+
+            for menu in menu_list:
+
+                ind = menu_list.index(menu)
+
+                if menu_list.index(menu) + 1 in special_list:
+                    while len(menu) < max_length:
+                        menu = menu[:-2] + "-" + menu[-2:]
+                        menu_list[ind] = menu
+
+                else:
+                    while len(menu) < max_length:
+                        menu = menu[:-3] + " " + menu[-3:]
+                        menu_list[ind] = menu
+
+            return "".join(menu_list)
+
+        def shop_menu(balance: int):
+            menu_line1 = " ------------------------------- \n"
+            menu_line2 = "| Shop Menu |\n"
+            menu_line3 = "|-------------------------------|\n"
+            menu_line4 = "| 1) Buy |\n"
+            menu_line5 = "| 2) Sell | \n"
+            menu_line6 = "| 3) Inventory | \n"
+            menu_line7 = "|-------------------------------|\n"
+            menu_line8 = f"| Balance - {balance} |\n"
+            menu_line9 = " ------------------------------- "
+
+            menu_list = [menu_line1, menu_line2, menu_line3, menu_line4, menu_line5,
+                         menu_line6, menu_line7, menu_line8, menu_line9]
+            return MenuSprites.ShopMenus.shop_menu_spacing(menu_list, [1, 3, 7, 9])
+
+        shop_menu_buy = None
+
+        def shop_menu_sell(item_type: str, item_list: List[Union[WeaponType, ArmourType,
+         UnknownWeaponType, UnknownArmourType]]):
+
+            if item_type in ("armour", "weapons"):
+                key = item_type.capitalize()
+
+            menu_list = []
+            menu_list.append(" ------------------------------- \n")
+            menu_list.append(f"| {key} |\n")
+            menu_list.append("|-------------------------------|\n")
+
+            for item in item_list:
+                name, value = item.name, item.price
+                if name is None and value == 0:
+                    continue
+                else:
+                    menu_list.append(f"| {name} - ${value} |\n")
+                    
+            menu_list.append(" ------------------------------- \n")
+            return MenuSprites.ShopMenus.shop_menu_spacing(menu_list, [1, 3, len(menu_list)])
+
     load_save_menu = None
 
 
