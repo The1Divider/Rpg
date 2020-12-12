@@ -1,3 +1,4 @@
+from InventorySystem import ThisShouldntComeUp
 from dataclasses import dataclass
 from typing import List, Type, Optional, Union
 
@@ -199,6 +200,7 @@ class MenuSprites:
 
             return "".join(menu_list)
 
+        @staticmethod
         def shop_menu(balance: int):
             menu_line1 = " ------------------------------- \n"
             menu_line2 = "| Shop Menu |\n"
@@ -216,11 +218,15 @@ class MenuSprites:
 
         shop_menu_buy = None
 
+        @staticmethod
         def shop_menu_sell(item_type: str, item_list: List[Union[WeaponType, ArmourType,
          UnknownWeaponType, UnknownArmourType]]):
 
             if item_type in ("armour", "weapons"):
                 key = item_type.capitalize()
+
+            else:
+                raise ThisShouldntComeUp
 
             menu_list = []
             menu_list.append(" ------------------------------- \n")

@@ -4,7 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Callable, List, Optional, Tuple, Literal, overload, Union
 
-from Objects.Items import ItemList, UnknownItem, UnknownArmour, ItemType, ArmourType, UnknownItemType, UnknownArmourType
+from Objects.Items import ItemList, UnknownWeapon, UnknownArmour, WeaponType, ArmourType, UnknownWeaponType, UnknownArmourType
 from Objects.Sprites import MenuSprites
 
 
@@ -48,8 +48,8 @@ class Armour:
 @dataclass(init=False)
 class Weapons:
     """Set player weapon attributes"""
-    weapon1: Optional[ItemType]
-    weapon2: Optional[ItemType]
+    weapon1: Optional[WeaponType]
+    weapon2: Optional[WeaponType]
     quiver: int
 
 
@@ -74,6 +74,8 @@ class Levels:
     difficulty: Optional[int] = None
     player_level: int = 1
     player_exp: int = 0
+    balance: int = 0
+    
 
 class InventoryBus:
     def __init__(self):
@@ -84,14 +86,21 @@ class InventoryBus:
             self.listeners[event_name] = []
         self.listeners[event_name].append(callback)
 
-    def emit(self, event_name, payload):
+    def emit(self, event_name, payload) -> Optional[WeaponType]:
         for listener in self.listeners.get(event_name, []):
+            cargo: Optional[WeaponType]
             if isinstance(payload, List):
-                cargo: Optional[ItemType] = listener(*payload)
+                cargo = listener(*payload)
+            elif payload is None:
+                cargo = listener()
             else:
-                cargo: Optional[ItemType] = listener(payload)
+                cargo = listener(payload)
+
             if cargo is not None:
                 return cargo
+
+            else:
+                return None
 
 
 class InventoryState:
@@ -121,7 +130,7 @@ class InventoryState:
         return [getattr(self.Armour, attribute) for attribute in self.armour_slots]
 
     @property
-    def weapon_list(self) -> List[Union[ItemType, UnknownItemType]]:
+    def weapon_list(self) -> List[Union[WeaponType, UnknownWeaponType]]:
         return [getattr(self.Weapons, attribute) for attribute in self.weapon_slots]
 
     @property
@@ -132,7 +141,7 @@ class InventoryState:
         """give new player preset items"""
         [setattr(self.Armour, attribute, UnknownArmour())
          for attribute in self.armour_slots]
-        [setattr(self.Weapons, attribute, UnknownItem()) if attribute != "quiver" else 
+        [setattr(self.Weapons, attribute, UnknownWeapon()) if attribute != "quiver" else 
          setattr(self.Weapons, attribute, 0) for attribute in self.weapon_slots]
         [setattr(self.Stats, attribute, value)
          for attribute, value in zip(self.stat_slots, [10, 1, 0, 0, 0, 0])]
@@ -169,14 +178,12 @@ class InventoryPersistance:
         level_dict = {"Difficulty": lev.difficulty,
                       "Player Level": lev.player_level}
         bag = []
-        bag_queue = self.bag
+        bag_queue = self.state.weapon_bag
 
         for _ in range(bag_queue.qsize()):
-            item = bag_queue.get()
-            hidden = item.hidden.hidden_template
-            item = item.item_template
-            item["Hidden"] = hidden
-            bag.append(item)
+            weapon = bag_queue.get()
+            weapon_template = weapon.weapon_template
+            bag.append(weapon_template)
 
         dicts = [("weapon", weapon_dict), ("armour", armour_dict)]
 
@@ -184,19 +191,27 @@ class InventoryPersistance:
 
             for key, value in subdict[1].items():
 
-                if value is not None and key != "Quiver":
-                    hidden = value.hidden.hidden_template
+                if isinstance(value, UnknownArmour) or isinstance(value, UnknownWeapon):
+                    subdict[1][key] = None
 
+                else:
                     if subdict[0] == "weapon":
-                        item = value.item_template
 
-                    else:
+                        if key != "Quiver":
+                            item = value.weapon_template
+
+                        else:
+                            continue
+
+                    elif subdict[0] == "armour":
                         item = value.armour_template
 
-                    item["Hidden"] = hidden
+                    else:
+                        raise ThisShouldntComeUp
+
                     subdict[1][key] = item
 
-        with open("character.json", "w") as f:
+        with open("character.json", "w") as f: # change this to allow for multiple files
             player = {"Armour": armour_dict, "Weapons": weapon_dict, "Bag": bag,
                       "Stats": stat_dict, "Levels": level_dict}
             json.dump(player, f, indent=2)
@@ -205,6 +220,7 @@ class InventoryPersistance:
 
         return None
 
+    # 100% broken, should also be changed to allow loading from multiple files
     def load_player(self) -> None:
         with open("character.json", "r") as f:
             player = json.load(f)
@@ -323,9 +339,9 @@ class InventoryPersistance:
             elif selection in ('y', "yes"):
                 if size > 8:
                     raise FullBag
-                with suppress(AttributeError):
-                    item1 = getattr(self.state.Weapons, "weapon1")
-                    item2 = getattr(self.state.Weapons, "weapon2")
+                
+                item1 = getattr(self.state.Weapons, "weapon1")
+                item2 = getattr(self.state.Weapons, "weapon2")
                 setattr(self.state.Weapons, "weapon1", item)
                 self.state.weapon_bag.put(item1)
                 self.state.weapon_bag.put(item2)
@@ -334,7 +350,7 @@ class InventoryPersistance:
                 self.state.weapon_bag.put(item)
                 raise ThisShouldntComeUp
 
-    def get_weapon_from_bag_with_weapon_name(self, weapon_name: str, copy: bool) -> ItemType:
+    def get_weapon_from_bag_with_weapon_name(self, weapon_name: str, copy: bool) -> WeaponType:
         bag_item = None
         bag_size = self.state.weapon_bag.qsize()
 
@@ -361,7 +377,7 @@ class InventoryPersistance:
 
         return bag_item
 
-    def get_weapon_from_bag_with_index(self, index: int, copy: bool) -> ItemType:
+    def get_weapon_from_bag_with_index(self, index: int, copy: bool) -> WeaponType:
         bag_item = None
         bag_size = self.state.weapon_bag.qsize()
 
@@ -401,7 +417,7 @@ class InventoryPersistance:
                 if selected_item.name == None:
                     pass
                 elif selected_item.name.lower().replace(" ", "").replace("-", "") == weapon_name:
-                    setattr(self.state.Weapons, weapon_slot, UnknownItem())
+                    setattr(self.state.Weapons, weapon_slot, UnknownWeapon())
                     self.state.weapon_bag.put(selected_item)
                     return None
             else:
@@ -417,22 +433,20 @@ class InventoryPersistance:
         if index is not None and index in ["weapon1", "weapon2"]:
             selected_item = getattr(self.state.Weapons, index)
 
-            if isinstance(selected_item, UnknownItem):
+            if isinstance(selected_item, UnknownWeapon):
                 raise NoItem
 
-            setattr(self.state.Weapons, index, UnknownItem())
+            setattr(self.state.Weapons, index, UnknownWeapon())
             self.state.weapon_bag.put(selected_item)
             return None
         else:
             raise InvalidIndex
 
     @overload
-    def drop_weapon(self, weapon_name: str, index: Literal[None]) -> None:
-        ...
+    def drop_weapon(self, weapon_name: str, index: Literal[None]) -> None: ...
 
     @overload
-    def drop_weapon(self, weapon_name: Literal[None], index: int) -> None:
-        ...
+    def drop_weapon(self, weapon_name: Literal[None], index: int) -> None: ...
 
     def drop_weapon(self, weapon_name: Optional[str], index: Optional[int]) -> None:
         selected_item = None
@@ -466,7 +480,10 @@ class InventoryDisplay:
     state: InventoryState
     bus: InventoryBus
 
-    def stats_setup(self, in_loop: bool) -> Tuple[List, int]:
+    def __post_init__(self):
+        self.bus.listen("inventory_display", self.inventory_display)
+
+    def stats_setup(self, in_loop: bool) -> Tuple[List, int]: # this can probably be cleaned up
         """
         :return: [hp, armour_hp, dmg, weapon_dmg, defence, armour_defence, crit, weapon_crit, crit_chance,
                   weapon_crit_chance, block, self.Levels.player_level, exp, exp_percent]
@@ -520,7 +537,7 @@ class InventoryDisplay:
 
         else:
             return self.stat_list_temp, 0
-
+        
     def inventory_display(self) -> None:  # class
         """Displays with setup"""
         armour_display = MenuSprites.InventoryMenus.inventory_armour_menu
@@ -577,7 +594,7 @@ class InventoryDisplay:
 
             for weapon in self.state.weapon_list:
                 if weapon is None:
-                    weapon = UnknownItem()
+                    weapon = UnknownWeapon()
                     weapon_list.append(weapon)
                 else:
                     weapon_list.append(weapon)
@@ -644,11 +661,11 @@ class InventoryDisplay:
                 return None
 
         def bag_menu() -> None:
-            bag_list: List[Union[ItemType, UnknownItemType]] = []
+            bag_list: List[Union[WeaponType, UnknownWeaponType]] = []
 
             for index in range(1, 11):
                 try:
-                    item: Optional[Union[ItemType, UnknownItemType]] = \
+                    item: Optional[Union[WeaponType, UnknownWeaponType]] = \
                         self.bus.emit("get_weapon_from_bag_with_index", [index, True])
 
                     if item == None:
@@ -660,11 +677,11 @@ class InventoryDisplay:
                     raise NoSelection
 
                 except EmptyBag:
-                    item = UnknownItem()
+                    item = UnknownWeapon()
                     bag_list.append(item)
                     
                 except InvalidIndex:
-                    item = UnknownItem()
+                    item = UnknownWeapon()
                     bag_list.append(item)
 
             print(bag_display(bag_list))
@@ -767,8 +784,9 @@ class InventoryDisplay:
 class Inventory:
     def __init__(self, state: InventoryState, bus: InventoryBus) -> None:
         self.state = state
-        self.persistance = InventoryPersistance(state, bus)
-        self.display = InventoryDisplay(state, bus)
+        self.bus = bus
+        self.persistance = InventoryPersistance(state, self.bus)
+        self.display = InventoryDisplay(state, self.bus)
 
     def save(self):
         self.persistance.save_player()
