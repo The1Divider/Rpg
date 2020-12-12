@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import NewType, Optional, Dict, Union
+from typing import NewType, Optional, Dict
 
 
 @dataclass
-class UnknownItem:
+class UnknownWeapon:
     name = None
     item_weight: int = 0
     dmg: int  = 0
@@ -32,11 +32,13 @@ class Hidden:
     hidden_template: Dict = field(init=False)
 
     def __post_init__(self):
-        self.hidden_template = {"Item_Id": self.item_id, "Req_Level": self.req_level, "Sellable": self.sellable}
+        self.hidden_template = {"Item_Id": self.item_id,
+                                "Req_Level": self.req_level,
+                                "Sellable": self.sellable}
 
 
 @dataclass
-class Item:
+class Weapon:
     name: str
     item_weight: int
     dmg: int
@@ -46,12 +48,17 @@ class Item:
     price: int
     hidden: Hidden
 
-    item_template: Dict = field(init=False)
+    weapon_template: Dict = field(init=False)
 
     def __post_init__(self):
-        self.item_template = {'Name': self.name, 'Item_weight': self.item_weight,
-                              'Dmg': self.dmg, 'Crit': self.crit, 'Crit_Chance': self.crit_chance,
-                              'Special': self.special, 'Price': self.price, 'Hidden': self.hidden}
+        self.weapon_template = {'Name': self.name,
+                              'Item_weight': self.item_weight,
+                              'Dmg': self.dmg, 
+                              'Crit': self.crit, 
+                              'Crit_Chance': self.crit_chance,
+                              'Special': self.special, 
+                              'Price': self.price, 
+                              'Hidden': self.hidden.hidden_template}
 
 
 @dataclass
@@ -66,34 +73,38 @@ class Armour:
     armour_template: Dict = field(init=False)
 
     def __post_init__(self):
-        self.armour_template = {"Name": self.name, "Hp": self.hp, "Defence": self.defence,
-                                "Special": self.special, "Price": self.price, "Hidden": self.hidden}
+        self.armour_template = {"Name": self.name,
+                                "Hp": self.hp, 
+                                "Defence": self.defence,
+                                "Special": self.special,
+                                "Price": self.price,
+                                "Hidden": self.hidden.hidden_template}
 
 
-UnknownItemType = UnknownItem
+UnknownWeaponType = UnknownWeapon
 UnknownArmourType = UnknownArmour
 HiddenType = Hidden
-ItemType = Item
+WeaponType = Weapon
 ArmourType = Armour
 
 
 class ItemList:
-    item_list = ["Rock", "Sticky Rock", "Basic Sword", "Copper Sword", "Iron Sword", "Steel Sword",
+    weapon_list = ["Rock", "Sticky Rock", "Basic Sword", "Copper Sword", "Iron Sword", "Steel Sword",
                  "Diamond-Cut Steel Sword", "Handcrafted Bow"]
 
     armour_list = ["Straw Sunhat", "Cotton Shirt", "Cotton Pants", "Straw Sandals", "Leather Helmet", "Leather Tunic",
                    "Leather Leggings", "Leather Boots", "Wedding Ring"]
 
-    rock = Item(item_list[0], 1, 1, 0, 0, "", 0, Hidden(1, None, False))
-    sticky_rock = Item(item_list[1], 1, 1, 0, 0, "Sticky", 0, Hidden(2, None, False))
+    rock = Weapon(weapon_list[0], 1, 1, 0, 0, "", 0, Hidden(1, None, False))
+    sticky_rock = Weapon(weapon_list[1], 1, 1, 0, 0, "Sticky", 0, Hidden(2, None, False))
     basic_sword_tag = "Nothing, what did you expect?"
-    basic_sword = Item(item_list[2], 1, 5, 0, 0, basic_sword_tag, 1, Hidden(3, None, True))
-    copper_sword = Item(item_list[3], 2, 5, 50, 5, "", 5, Hidden(4, 2, True))
-    iron_sword = Item(item_list[4], 2, 10, 50, 20, "", 10, Hidden(5, 5, True))
-    steel_sword = Item(item_list[5], 3, 15, 75, 20, "", 25, Hidden(6, 10, True))
-    diamond_cut_steel_sword = Item(item_list[6], 4, 25, 25, 10, "", 50, Hidden(7, 15, True))
+    basic_sword = Weapon(weapon_list[2], 1, 5, 0, 0, basic_sword_tag, 1, Hidden(3, None, True))
+    copper_sword = Weapon(weapon_list[3], 2, 5, 50, 5, "", 5, Hidden(4, 2, True))
+    iron_sword = Weapon(weapon_list[4], 2, 10, 50, 20, "", 10, Hidden(5, 5, True))
+    steel_sword = Weapon(weapon_list[5], 3, 15, 75, 20, "", 25, Hidden(6, 10, True))
+    diamond_cut_steel_sword = Weapon(weapon_list[6], 4, 25, 25, 10, "", 50, Hidden(7, 15, True))
 
-    handcrafted_bow = Item(item_list[7], 2, 5, 0, 0, "", 2, Hidden(8, 1, True))
+    handcrafted_bow = Weapon(weapon_list[7], 2, 5, 0, 0, "", 2, Hidden(8, 1, True))
 
     straw_sunhat = Armour(armour_list[0], 1, 0, "", 1, Hidden(9, None, True))
     cotton_shirt = Armour(armour_list[1], 1, 0, "", 1, Hidden(10, None, True))
