@@ -3,6 +3,7 @@ from contextlib import suppress
 from Game import start_game
 from Objects.Sprites import MenuSprites
 from InventorySystem import InventoryBus, InventoryState, Inventory
+from Shop import ShopMenu
 
 state = InventoryState()
 bus = InventoryBus()
@@ -68,7 +69,7 @@ def main_menu() -> None:
         return main_menu()
 
     elif selection in [3, "shop"]:
-        pass
+        ShopMenu(inv)
 
     elif selection in [4, "stats"]:
         inv.display.stats_display(in_loop=False)
